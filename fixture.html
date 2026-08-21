@@ -82,8 +82,8 @@ function render(f) {
   }).join('');
   html += `</div>`;
 
-  const eighties = f.stats.filter(s => s.type === '180');
-  const finishes = f.stats.filter(s => s.type === 'finish');
+  const eighties = f.stats.filter(s => String(s.type) === '180');
+  const finishes = f.stats.filter(s => String(s.type) === 'finish');
   if (eighties.length || finishes.length) {
     html += `<h2 class="section-title">180s &amp; 100+ finishes</h2><div class="card">`;
     if (eighties.length) {
