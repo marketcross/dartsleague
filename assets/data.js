@@ -5,8 +5,8 @@
 const SITE_CONFIG = {
   // Paste your Apps Script web app URL here (Deploy > Manage deployments > Web app URL),
   // keeping "?page=api" on the end exactly as shown. Example:
-  // 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api'
-  API_URL: 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api',
+  // 'https://script.google.com/macros/s/AKfycbXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec?page=api'
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE?page=api',
 };
 
 let _dataPromise = null;
@@ -14,7 +14,7 @@ let _dataPromise = null;
 // Fetches once and caches for the lifetime of the page (every page calls this on load).
 function loadLeagueData() {
   if (!_dataPromise) {
-    _dataPromise = fetch(SITE_CONFIG.API_URL)
+    _dataPromise = fetch(SITE_CONFIG.API_URL.trim())
       .then(r => {
         if (!r.ok) throw new Error('Server returned ' + r.status);
         return r.json();
@@ -38,6 +38,22 @@ function escapeHtml(str) {
 
 function teamParam(name) {
   return encodeURIComponent(name);
+}
+
+// The captain portal and player admin page are the same Apps Script web app as the
+// API, just without "?page=api" (portal) or with "?page=admin" (admin) — so both
+// links come free from the one URL already pasted in above.
+function appBaseUrl() {
+  // Split on the first "?" rather than matching "?page=api" exactly, so this still
+  // works even if the pasted URL has extra whitespace or a slightly different query
+  // string on the end.
+  return SITE_CONFIG.API_URL.trim().split('?')[0];
+}
+function captainPortalUrl() {
+  return appBaseUrl();
+}
+function playerAdminUrl() {
+  return appBaseUrl() + '?page=admin';
 }
 
 // Submitted fixtures (results) newest first; everything else (upcoming) soonest first.
