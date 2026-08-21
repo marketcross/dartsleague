@@ -150,14 +150,14 @@ function renderTable(table) {
   el.innerHTML = `<table class="data">
     <thead><tr>
       <th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th>
-      <th class="num">Pts</th><th class="num">Legs +/-</th>
+      <th class="num">Pts</th><th class="num">Game +/-</th>
     </tr></thead>
     <tbody>
       ${table.map((t, i) => `
       <tr class="${i === 0 ? 'leader' : ''}">
         <td><a href="team.html?name=${teamParam(t.team)}">${escapeHtml(t.team)}</a></td>
         <td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td>
-        <td class="num">${t.points}</td><td class="num">${t.legDiff > 0 ? '+' : ''}${t.legDiff}</td>
+        <td class="num">${t.points}</td><td class="num">${t.gameDiff > 0 ? '+' : ''}${t.gameDiff}</td>
       </tr>`).join('')}
     </tbody>
   </table>`;
