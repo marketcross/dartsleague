@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html" class="current">Teams</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <a class="backline" href="teams.html">← All teams</a>
+  <div id="content"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+const teamName = new URLSearchParams(location.search).get('name');
+
+loadLeagueData().then(data => {
+  if (!teamName || !data.teams.includes(teamName)) {
+    document.getElementById('content').innerHTML = '<div class="card"><p class="empty">Couldn\'t find that team.</p></div>';
+    return;
+  }
+  render(data);
+}).catch(showPageError);
+
+function render(data) {
+  const roster = (data.rosters[teamName] || []);
+  const teamFixtures = data.fixtures.filter(f => f.homeTeam === teamName || f.awayTeam === teamName);
+  const { results, upcoming } = splitFixtures(teamFixtures);
+  const tableRow = data.leagueTable.find(t => t.team === teamName);
+
+  let html = `<h2 class="page-title">${escapeHtml(teamName)}</h2>`;
+
+  if (tableRow) {
+    html += `<div class="card">
+      <table class="data">
+        <thead><tr><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th><th class="num">Legs +/-</th></tr></thead>
+        <tbody><tr>
+          <td class="num">${tableRow.played}</td><td class="num">${tableRow.won}</td><td class="num">${tableRow.lost}</td>
+          <td class="num">${tableRow.points}</td><td class="num">${tableRow.legDiff > 0 ? '+' : ''}${tableRow.legDiff}</td>
+        </tr></tbody>
+      </table>
+    </div>`;
+  }
+
+  html += `<h2 class="section-title">Squad</h2><div class="card">`;
+  html += roster.length
+    ? `<p>${roster.map(escapeHtml).join(', ')}</p>`
+    : `<p class="empty">No players registered yet.</p>`;
+  html += `</div>`;
+
+  html += `<h2 class="section-title">Results</h2><div class="card" id="resultsBox">`;
+  html += results.length ? results.map(f => rowHtml(f)).join('') : `<p class="empty">No results yet.</p>`;
+  html += `</div>`;
+
+  html += `<h2 class="section-title">Upcoming fixtures</h2><div class="card" id="upcomingBox">`;
+  html += upcoming.length ? upcoming.map(f => rowHtml(f)).join('') : `<p class="empty">No fixtures scheduled.</p>`;
+  html += `</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function rowHtml(f) {
+  const opponent = f.homeTeam === teamName ? f.awayTeam : f.homeTeam;
+  const venue = f.homeTeam === teamName ? 'Home' : 'Away';
+  let right;
+  if (f.status === 'Submitted') {
+    const us = f.homeTeam === teamName ? f.homePoints : f.awayPoints;
+    const them = f.homeTeam === teamName ? f.awayPoints : f.homePoints;
+    right = `<span class="result">${us}–${them}</span>`;
+  } else {
+    const s = statusLabel(f.status);
+    right = `<span class="status-tag ${s.cls}">${s.text}</span>`;
+  }
+  return `
+    <a class="fixture-row" style="text-decoration:none; color:inherit;" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">
+      <div>
+        <div class="teams">${venue} v ${escapeHtml(opponent)}</div>
+        <div class="date">${escapeHtml(f.date)}</div>
+      </div>
+      ${right}
+    </a>`;
+}
+</script>
+</body>
+</html>

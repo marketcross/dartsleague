@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Stats — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html" class="current">Player Stats</a>
+      <a href="teams.html">Teams</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <h2 class="page-title">Player Stats</h2>
+  <p class="page-sub">Games played and won, split by singles and pairs — from submitted results only.</p>
+
+  <div class="filter-row">
+    <label for="teamFilter">Team</label>
+    <select id="teamFilter"><option value="">All teams</option></select>
+  </div>
+
+  <div class="card table-scroll" id="statsTable"><p class="loading">Loading…</p></div>
+
+  <h2 class="section-title">180s this season</h2>
+  <div class="card table-scroll" id="eightiesList"><p class="loading">Loading…</p></div>
+
+  <h2 class="section-title">100+ finishes this season</h2>
+  <div class="card table-scroll" id="finishesList"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+let allStats = [];
+
+loadLeagueData().then(data => {
+  allStats = data.playerStats;
+  const sel = document.getElementById('teamFilter');
+  sel.innerHTML = '<option value="">All teams</option>' + data.teams.map(t => `<option>${escapeHtml(t)}</option>`).join('');
+  const preset = new URLSearchParams(location.search).get('team');
+  if (preset && data.teams.includes(preset)) sel.value = preset;
+  renderAll();
+  sel.addEventListener('change', renderAll);
+}).catch(showPageError);
+
+function renderAll() {
+  const team = document.getElementById('teamFilter').value;
+  const list = team ? allStats.filter(p => p.team === team) : allStats;
+  renderTable(list);
+  renderEighties(list);
+  renderFinishes(list);
+}
+
+function renderTable(list) {
+  const el = document.getElementById('statsTable');
+  if (!list.length) { el.innerHTML = '<p class="empty">No games played yet.</p>'; return; }
+  el.innerHTML = `<table class="data">
+    <thead><tr>
+      <th>Player</th><th>Team</th>
+      <th class="num">Singles P</th><th class="num">Singles W</th>
+      <th class="num">Pairs P</th><th class="num">Pairs W</th>
+      <th class="num">Overall P</th><th class="num">Overall W</th>
+      <th class="num">180s</th><th class="num">Best finish</th>
+    </tr></thead>
+    <tbody>
+      ${list.map(p => `
+      <tr>
+        <td>${escapeHtml(p.name)}</td>
+        <td><a href="team.html?name=${teamParam(p.team)}">${escapeHtml(p.team)}</a></td>
+        <td class="num">${p.singlesPlayed}</td><td class="num">${p.singlesWon}</td>
+        <td class="num">${p.pairsPlayed}</td><td class="num">${p.pairsWon}</td>
+        <td class="num">${p.played}</td><td class="num">${p.won}</td>
+        <td class="num">${p.oneEighties || ''}</td>
+        <td class="num">${p.bestFinish || ''}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderEighties(list) {
+  const el = document.getElementById('eightiesList');
+  const withEighties = list.filter(p => p.oneEighties > 0).sort((a, b) => b.oneEighties - a.oneEighties || a.name.localeCompare(b.name));
+  if (!withEighties.length) { el.innerHTML = '<p class="empty">None logged yet.</p>'; return; }
+  el.innerHTML = `<table class="data"><thead><tr><th>Player</th><th>Team</th><th class="num">180s</th></tr></thead><tbody>
+    ${withEighties.map(p => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.team)}</td><td class="num">${p.oneEighties}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderFinishes(list) {
+  const el = document.getElementById('finishesList');
+  const rows = [];
+  list.forEach(p => p.finishes.forEach(v => rows.push({ name: p.name, team: p.team, value: v })));
+  rows.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+  if (!rows.length) { el.innerHTML = '<p class="empty">None logged yet.</p>'; return; }
+  el.innerHTML = `<table class="data"><thead><tr><th>Player</th><th>Team</th><th class="num">Checkout</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.team)}</td><td class="num">${r.value}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+</script>
+</body>
+</html>

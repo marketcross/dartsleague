@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixture — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html" class="current">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html">Teams</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <a class="backline" href="fixtures.html">← All fixtures</a>
+  <div id="content"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+const fixtureId = new URLSearchParams(location.search).get('id');
+
+loadLeagueData().then(data => {
+  const f = data.fixtures.find(x => x.fixtureId === fixtureId);
+  if (!f) {
+    document.getElementById('content').innerHTML = '<div class="card"><p class="empty">Couldn\'t find that fixture — it may have been removed.</p></div>';
+    return;
+  }
+  render(f);
+}).catch(showPageError);
+
+function render(f) {
+  const s = statusLabel(f.status);
+  let html = `
+    <h2 class="page-title">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</h2>
+    <p class="page-sub">${escapeHtml(f.date)} · <span class="status-tag ${s.cls}">${s.text}</span></p>`;
+
+  if (f.status !== 'Submitted') {
+    html += `<div class="card"><p class="empty">No result yet — check back after the fixture is played.</p></div>`;
+    document.getElementById('content').innerHTML = html;
+    return;
+  }
+
+  html += `<div class="card">
+    <div class="fixture-row" style="border-bottom:none;">
+      <div class="teams" style="font-size:18px;">${escapeHtml(f.homeTeam)}</div>
+      <div class="result" style="font-size:22px;">${f.homePoints} – ${f.awayPoints}</div>
+    </div>
+    <div class="fixture-row" style="border-bottom:none; padding-top:0;">
+      <div class="teams" style="font-size:18px;">${escapeHtml(f.awayTeam)}</div>
+      <div></div>
+    </div>
+  </div>`;
+
+  html += `<h2 class="section-title">Games</h2><div class="card">`;
+  html += f.games.map(g => {
+    const tag = (g.type === 'Pairs' ? 'Pairs ' : 'Singles ') + (g.type === 'Pairs' ? g.n : g.n - 3);
+    const home = g.type === 'Pairs' ? [g.homePlayer1, g.homePlayer2].filter(Boolean).join(' & ') : (g.homePlayer1 || '—');
+    const away = g.type === 'Pairs' ? [g.awayPlayer1, g.awayPlayer2].filter(Boolean).join(' & ') : (g.awayPlayer1 || '—');
+    const homeScore = scoreForTeam(g, f.homeTeam);
+    return `
+    <div class="fixture-row">
+      <div>
+        <div style="font-size:11px; color:var(--sub); text-transform:uppercase; font-weight:700; letter-spacing:.02em;">${tag}</div>
+        <div class="teams">${escapeHtml(home)} <span style="color:var(--sub); font-weight:400;">v</span> ${escapeHtml(away)}</div>
+      </div>
+      <span class="result">${homeScore}</span>
+    </div>`;
+  }).join('');
+  html += `</div>`;
+
+  const eighties = f.stats.filter(s => s.type === '180');
+  const finishes = f.stats.filter(s => s.type === 'finish');
+  if (eighties.length || finishes.length) {
+    html += `<h2 class="section-title">180s &amp; 100+ finishes</h2><div class="card">`;
+    if (eighties.length) {
+      const counts = {};
+      eighties.forEach(e => { counts[e.name] = (counts[e.name] || 0) + 1; });
+      html += `<p><strong>180s:</strong> ` + Object.keys(counts).map(n => `${escapeHtml(n)} (${counts[n]})`).join(', ') + `</p>`;
+    }
+    if (finishes.length) {
+      html += `<p><strong>100+ finishes:</strong> ` + finishes.map(e => `${escapeHtml(e.name)} (${e.value})`).join(', ') + `</p>`;
+    }
+    html += `</div>`;
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teams — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html" class="current">Teams</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <h2 class="page-title">Teams</h2>
+  <p class="page-sub">Pick a team to see their squad, fixtures and results.</p>
+  <div class="card" id="teamList"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+loadLeagueData().then(data => {
+  const el = document.getElementById('teamList');
+  if (!data.teams.length) { el.innerHTML = '<p class="empty">No teams set up yet.</p>'; return; }
+  el.innerHTML = data.teams.map(t => `
+    <a class="fixture-row" style="text-decoration:none; color:inherit;" href="team.html?name=${teamParam(t)}">
+      <div class="teams">${escapeHtml(t)}</div>
+      <span>→</span>
+    </a>`).join('');
+}).catch(showPageError);
+</script>
+</body>
+</html>
