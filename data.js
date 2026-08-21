@@ -6,7 +6,7 @@ const SITE_CONFIG = {
   // Paste your Apps Script web app URL here (Deploy > Manage deployments > Web app URL),
   // keeping "?page=api" on the end exactly as shown. Example:
   // 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api'
-  API_URL: 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE?page=api',
+  API_URL: 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api',
 };
 
 let _dataPromise = null;
