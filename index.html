@@ -24,6 +24,7 @@
 <div class="wrap">
   <div class="err-banner" id="errBanner"></div>
 
+  <h2 class="section-title" style="margin-top:0;">Admin</h2>
   <div class="quicklinks">
     <a class="quicklink-card" id="portalLink" href="#" target="_blank" rel="noopener">
       <span class="icon">
@@ -54,7 +55,7 @@
     </a>
   </div>
 
-  <h2 class="section-title" style="margin-top:0;">Latest news</h2>
+  <h2 class="section-title">Latest news</h2>
   <div id="newsSection" class="card"><p class="loading">Loading…</p></div>
 
   <div class="grid-2">
@@ -82,8 +83,14 @@
 
 <script src="assets/data.js"></script>
 <script>
-document.getElementById('portalLink').href = captainPortalUrl();
-document.getElementById('adminLink').href = playerAdminUrl();
+try {
+  document.getElementById('portalLink').href = captainPortalUrl();
+  document.getElementById('adminLink').href = playerAdminUrl();
+} catch (err) {
+  // If assets/data.js is ever an old/mismatched version, don't let that take the
+  // whole page down — just leave the buttons unlinked and keep going.
+  console.error('Could not set up the Admin buttons — assets/data.js may be out of date.', err);
+}
 
 loadLeagueData().then(render).catch(showPageError);
 
