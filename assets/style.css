@@ -99,4 +99,20 @@ tr.leader td:first-child{color:var(--brand);}
 .btn-secondary{background:#eef0f3; color:var(--ink);}
 .backline{display:inline-block; margin-bottom:14px; font-size:13px; color:var(--sub);}
 
+/* ---------- quick links (home page: portal / admin) ---------- */
+.quicklinks{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;}
+@media (max-width:600px){ .quicklinks{grid-template-columns:1fr;} }
+.quicklink-card{
+  display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); padding:16px 18px; color:var(--ink); text-decoration:none;
+}
+.quicklink-card:hover{border-color:var(--brand); text-decoration:none; background:#fbf6f6;}
+.quicklink-card .icon{
+  flex-shrink:0; width:40px; height:40px; border-radius:10px; background:var(--brand); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+}
+.quicklink-card .icon svg{width:22px; height:22px;}
+.quicklink-card .title{font-weight:700; font-size:15px; margin-bottom:2px;}
+.quicklink-card .desc{font-size:13px; color:var(--sub);}
+
 footer.site{max-width:var(--maxw); margin:32px auto 0; padding:16px; color:var(--sub); font-size:12px; text-align:center;}
