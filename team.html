@@ -52,10 +52,10 @@ function render(data) {
   if (tableRow) {
     html += `<div class="card">
       <table class="data">
-        <thead><tr><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th><th class="num">Legs +/-</th></tr></thead>
+        <thead><tr><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th><th class="num">Game +/-</th></tr></thead>
         <tbody><tr>
           <td class="num">${tableRow.played}</td><td class="num">${tableRow.won}</td><td class="num">${tableRow.lost}</td>
-          <td class="num">${tableRow.points}</td><td class="num">${tableRow.legDiff > 0 ? '+' : ''}${tableRow.legDiff}</td>
+          <td class="num">${tableRow.points}</td><td class="num">${tableRow.gameDiff > 0 ? '+' : ''}${tableRow.gameDiff}</td>
         </tr></tbody>
       </table>
     </div>`;
