@@ -40,9 +40,11 @@ function teamParam(name) {
   return encodeURIComponent(name);
 }
 
-// The captain portal and player admin page are the same Apps Script web app as the
-// API, just without "?page=api" (portal) or with "?page=admin" (admin) — so both
-// links come free from the one URL already pasted in above.
+// The Apps Script web app's base URL (no "?page=..." on the end) — used as the
+// target for the background RPC calls below. The captain portal and player admin
+// pages themselves are just ordinary pages on this site now (see captainPortalUrl /
+// playerAdminUrl) rather than being served directly by Apps Script, because Apps
+// Script's own page-serving mechanism is unreliable on iOS Safari/WebKit.
 function appBaseUrl() {
   // Split on the first "?" rather than matching "?page=api" exactly, so this still
   // works even if the pasted URL has extra whitespace or a slightly different query
@@ -50,10 +52,44 @@ function appBaseUrl() {
   return SITE_CONFIG.API_URL.trim().split('?')[0];
 }
 function captainPortalUrl() {
-  return appBaseUrl();
+  return 'portal.html';
 }
 function playerAdminUrl() {
-  return appBaseUrl() + '?page=admin';
+  return 'admin.html';
+}
+
+// ---------- Captain portal / admin RPC helper ----------
+// portal.html and admin.html use this instead of google.script.run to read and write
+// the Apps Script backend, as a background fetch() call rather than a full page load
+// through script.google.com — which is what sidesteps the iOS loading problem above.
+//
+// Deliberately POSTs a plain string body with no explicit Content-Type header, so the
+// browser defaults it to "text/plain" — that keeps this a CORS "simple request" (no
+// preflight OPTIONS round trip), which is what keeps this feeling as fast as the old
+// google.script.run version did.
+const PASSCODE_KEY = 'mcdlPasscode';
+
+function callRpc(fn, ...args) {
+  const payload = { fn: fn, args: args, passcode: getStoredPasscode() };
+  return fetch(appBaseUrl(), { method: 'POST', body: JSON.stringify(payload) })
+    .then(r => {
+      if (!r.ok) throw new Error('Server returned ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      if (!data.ok) throw new Error(data.error || 'Something went wrong.');
+      return data.result;
+    });
+}
+
+function getStoredPasscode() {
+  try { return localStorage.getItem(PASSCODE_KEY) || ''; } catch (e) { return ''; }
+}
+function setStoredPasscode(code) {
+  try { localStorage.setItem(PASSCODE_KEY, code); } catch (e) { /* storage unavailable */ }
+}
+function clearStoredPasscode() {
+  try { localStorage.removeItem(PASSCODE_KEY); } catch (e) { /* storage unavailable */ }
 }
 
 // Submitted fixtures (results) newest first; everything else (upcoming) soonest first.
