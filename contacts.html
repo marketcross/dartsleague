@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contacts — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html">Teams</a>
+      <a href="honours.html">Previous Winners</a>
+      <a href="contacts.html" class="current">Contacts</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <h2 class="page-title">Contacts</h2>
+  <p class="page-sub">The league committee — get in touch about fixtures, results or anything else.</p>
+  <div class="card" id="committeeSection"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+loadLeagueData().then(render).catch(showPageError);
+
+function render(data) {
+  const el = document.getElementById('committeeSection');
+  const committee = data.committee || [];
+  if (!committee.length) {
+    el.innerHTML = '<p class="empty">No committee contacts added yet.</p>';
+    return;
+  }
+  el.innerHTML = committee.map(c => `
+    <div class="contact-row">
+      <div>
+        ${c.role ? `<div class="role">${escapeHtml(c.role)}</div>` : ''}
+        <div class="name">${escapeHtml(c.name)}</div>
+      </div>
+      <div class="details">
+        ${c.email ? `<a href="mailto:${encodeURIComponent(c.email)}">${escapeHtml(c.email)}</a>` : ''}
+        ${c.phone ? `<div>${escapeHtml(c.phone)}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

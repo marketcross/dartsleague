@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Previous Winners — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html">Teams</a>
+      <a href="honours.html" class="current">Previous Winners</a>
+      <a href="contacts.html">Contacts</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <h2 class="page-title">Previous Winners</h2>
+  <p class="page-sub">The league's roll of honour, season by season.</p>
+
+  <div class="filter-row">
+    <label for="compFilter">Competition</label>
+    <select id="compFilter"><option value="">All competitions (by season)</option></select>
+  </div>
+
+  <div id="honoursSection"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+let allHonours = [];
+
+// Known competitions display in this order within a season card; anything else (a cup you
+// add later, say) just gets appended alphabetically after — nothing needs to be hardcoded
+// for the site to pick up a new competition name from the sheet.
+const COMPETITION_ORDER = [
+  'League', 'Division 1', 'Division 2',
+  'Knock Out Cup', 'Subsidiary Cup', 'Pairs', 'Singles',
+];
+
+function competitionRank(name) {
+  const i = COMPETITION_ORDER.indexOf(name);
+  return i === -1 ? COMPETITION_ORDER.length : i;
+}
+
+// Seasons are free text ("2024/25", "2024", whatever a club is used to writing) rather than
+// a strict format, so sort by the first 4-digit year found in the string, newest first.
+function seasonSortKey(season) {
+  const m = String(season).match(/\d{4}/);
+  return m ? Number(m[0]) : -Infinity;
+}
+
+loadLeagueData().then(data => {
+  allHonours = data.honours || [];
+  const sel = document.getElementById('compFilter');
+  const comps = [...new Set(allHonours.map(h => h.competition))]
+    .sort((a, b) => competitionRank(a) - competitionRank(b) || a.localeCompare(b));
+  sel.innerHTML = '<option value="">All competitions (by season)</option>'
+    + comps.map(c => `<option>${escapeHtml(c)}</option>`).join('');
+  render();
+  sel.addEventListener('change', render);
+}).catch(showPageError);
+
+function render() {
+  const comp = document.getElementById('compFilter').value;
+  const el = document.getElementById('honoursSection');
+  if (!allHonours.length) {
+    el.innerHTML = '<div class="card"><p class="empty">No past winners added yet.</p></div>';
+    return;
+  }
+  el.innerHTML = comp ? renderByCompetition(comp) : renderBySeason();
+}
+
+// One card per season, newest first — every competition recorded for that season on one
+// line each, in a sensible fixed order. This is the "what happened that year" view.
+function renderBySeason() {
+  const bySeason = {};
+  allHonours.forEach(h => {
+    if (!bySeason[h.season]) bySeason[h.season] = [];
+    bySeason[h.season].push(h);
+  });
+  const seasons = Object.keys(bySeason).sort((a, b) => seasonSortKey(b) - seasonSortKey(a));
+  return seasons.map(season => {
+    const rows = bySeason[season].slice().sort((a, b) => competitionRank(a.competition) - competitionRank(b.competition));
+    return `<div class="card honours-card">
+      <h3 class="honours-season">${escapeHtml(season)}</h3>
+      ${rows.map(h => `
+        <div class="honours-row">
+          <span class="honours-comp">${escapeHtml(h.competition)}</span>
+          <span class="honours-result">
+            <strong>${escapeHtml(h.winner || '—')}</strong>
+            ${h.runnerUp ? `<span class="honours-ru">RU: ${escapeHtml(h.runnerUp)}</span>` : ''}
+          </span>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// One flat table for a single competition, newest season first — the "who's won this
+// trophy over the years" view.
+function renderByCompetition(comp) {
+  const rows = allHonours.filter(h => h.competition === comp)
+    .sort((a, b) => seasonSortKey(b.season) - seasonSortKey(a.season));
+  if (!rows.length) return '<div class="card"><p class="empty">Nothing recorded yet.</p></div>';
+  return `<div class="card table-scroll">
+    <table class="data">
+      <thead><tr><th>Season</th><th>Winner</th><th>Runner-up</th></tr></thead>
+      <tbody>
+        ${rows.map(h => `<tr>
+          <td>${escapeHtml(h.season)}</td>
+          <td>${escapeHtml(h.winner || '—')}</td>
+          <td>${escapeHtml(h.runnerUp || '—')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+</script>
+</body>
+</html>
