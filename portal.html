@@ -95,6 +95,7 @@
 <body>
 <div class="wrap">
   <header class="app"><a href="index.html" style="color:inherit; text-decoration:none;">Market Cross Darts League</a><small>Captain results portal</small></header>
+  <a class="backline" href="index.html">← Back to site</a>
   <div class="err-banner" id="errBanner"></div>
 
   <!-- STEP 0: season access code -->
@@ -176,7 +177,7 @@
     <div id="review180s"></div>
     <div class="section-label">100+ Finishes</div>
     <div id="reviewFinishes"></div>
-    <div class="draft-banner">Everything above has already been saved as you went. Submitting just marks this fixture final and pushes it into the league table — no emails are sent. If a mistake turns up after, ask the league admin to reopen it.</div>
+    <div class="draft-banner">Everything above has already been saved as you went. Submitting just marks this fixture final and pushes it into the league table. If a mistake turns up after, ask the league admin to reopen it.</div>
     <button class="btn-primary" id="submitBtn" onclick="submitResult()">Submit final result</button>
     <button class="backline" onclick="showStep(3)">← Back and fix something</button>
   </div>
@@ -755,7 +756,7 @@ async function submitResult() {
     document.getElementById('confirmSummary').innerHTML =
       `You ${myPoints} – ${theirPoints} ${state.fixture.opponent}<br>
        (${result.gamesEntered} of ${result.gamesTotal} games had a result recorded)<br><br>
-       The league table has been updated. No emails were sent — this is now the official record.`;
+       The league table has been updated — this is now the official record.`;
     showStep(5);
   } catch (err) {
     showError(err);
