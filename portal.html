@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Cross Darts League — Captain Portal</title>
+<style>
+  :root{
+    --ink:#1c1f26; --sub:#5c6270; --line:#e3e5ea; --bg:#f6f7f9; --card:#ffffff;
+    --brand:#8b2f2f; --brand-ink:#ffffff; --ok:#2f7a4f; --ok-bg:#e9f6ee; --gold:#a9781f; --gold-bg:#fbf1dd;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink);}
+  .wrap{max-width:460px; margin:0 auto; padding:0 12px 48px;}
+  header.app{background:var(--brand); color:var(--brand-ink); padding:18px 20px; border-radius:0 0 var(--radius) var(--radius); font-weight:700; font-size:17px; margin-bottom:14px;}
+  header.app small{display:block; font-weight:400; font-size:12px; opacity:.85; margin-top:2px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; min-height:300px; margin-bottom:16px;}
+  h2{font-size:16px; margin:0 0 4px;}
+  p.sub{color:var(--sub); font-size:13px; margin:0 0 16px;}
+  .field{margin-bottom:16px;}
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:6px; text-transform:uppercase; letter-spacing:.02em;}
+  select, input[type=text], input[type=number]{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px; font-size:15px; background:#fff; color:var(--ink);}
+  .fixture-option{border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px; cursor:pointer;}
+  .fixture-option.selected{border-color:var(--brand); background:#fbf1f1;}
+  .fixture-option.disabled{opacity:.55; cursor:not-allowed;}
+  .fixture-option .vs{font-weight:700; font-size:14.5px;}
+  .fixture-option .meta{color:var(--sub); font-size:12.5px; margin-top:2px;}
+  .roster-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line);}
+  .roster-row:last-child{border-bottom:none;}
+  .toggle{width:44px; height:26px; border-radius:20px; background:var(--line); position:relative; cursor:pointer; flex-shrink:0;}
+  .toggle.on{background:var(--ok);}
+  .toggle .knob{width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:left .15s; box-shadow:0 1px 2px rgba(0,0,0,.25);}
+  .toggle.on .knob{left:21px;}
+  .add-player-row{display:flex; gap:8px; margin-top:14px;}
+  .add-player-row input{flex:1;}
+  button{font-family:inherit; font-size:14.5px; font-weight:600; border-radius:10px; border:none; cursor:pointer; padding:11px 16px;}
+  button:disabled{opacity:.5; cursor:default;}
+  .btn-primary{background:var(--brand); color:#fff; width:100%; margin-top:18px;}
+  .btn-secondary{background:#eef0f3; color:var(--ink);}
+  .btn-ghost{background:transparent; color:var(--brand); border:1px solid var(--brand); padding:9px 12px;}
+  .leg-block{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+  .leg-block .leg-title{font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.03em; margin-bottom:8px; display:flex; justify-content:space-between;}
+  .leg-block .tag{background:#eef0f3; color:var(--sub); border-radius:6px; padding:2px 7px; font-size:10.5px; font-weight:700;}
+  .leg-players{display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;}
+  .leg-players .side{flex:1;}
+  .leg-players .side-label{font-size:10px; color:var(--sub); text-transform:uppercase; font-weight:700; margin-bottom:3px;}
+  .leg-players select{font-size:13px; padding:7px; margin-bottom:4px;}
+  .leg-players .vsmall{color:var(--sub); font-size:12px; font-weight:700; padding-top:22px;}
+  .winner-pick{display:flex; gap:8px; margin-top:6px;}
+  .winner-btn{flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:#fff; font-size:12.5px; text-align:center;}
+  .winner-btn.chosen{background:var(--ok-bg); border-color:var(--ok); color:var(--ok); font-weight:700;}
+  .score-pick{display:flex; gap:6px; margin-top:6px;}
+  .score-btn{flex:1; padding:6px; border-radius:7px; border:1px solid var(--line); background:#fff; font-size:11.5px; text-align:center; color:var(--sub);}
+  .score-btn.chosen{background:#eef2ff; border-color:#6b7fd7; color:#3b4a9c; font-weight:700;}
+  .steps{display:flex; gap:4px; margin:0 0 18px;}
+  .steps span{flex:1; height:4px; border-radius:3px; background:var(--line);}
+  .steps span.done{background:var(--brand);}
+  .summary-row{display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; border-bottom:1px dashed var(--line);}
+  .summary-row:last-child{border-bottom:none;}
+  .confirm-box{text-align:center; padding:30px 10px;}
+  .confirm-box .tick{font-size:44px; margin-bottom:10px;}
+  .confirm-box p{color:var(--sub); font-size:13.5px; line-height:1.5;}
+  .backline{background:transparent; color:var(--sub); font-size:12.5px; margin-top:10px; text-decoration:underline; cursor:pointer; display:inline-block; border:none;}
+  .big-scores{border-top:1px dashed var(--line); margin-top:10px; padding-top:10px;}
+  .big-scores .bs-label{font-size:10.5px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px;}
+  .bs-row{display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;}
+  .bs-row .bs-name{font-size:12.5px; flex:1; min-width:70px;}
+  .stepper{display:flex; align-items:center; gap:8px;}
+  .stepper button{width:26px; height:26px; padding:0; border-radius:7px; border:1px solid var(--line); background:#fff; font-weight:700; font-size:14px; line-height:1; color:var(--brand);}
+  .stepper .count{font-size:12px; font-weight:700; min-width:56px; text-align:center;}
+  .finish-chip{padding:5px 9px; border-radius:20px; border:1px solid var(--gold); color:var(--gold); font-size:11px; font-weight:700; background:#fff; cursor:pointer;}
+  .finish-add{padding:5px 9px; border-radius:20px; border:1px dashed var(--gold); color:var(--gold); font-size:11px; font-weight:700; background:#fff; cursor:pointer;}
+  .finish-panel{display:flex; gap:6px; align-items:center; width:100%; margin-top:6px;}
+  .finish-panel input{flex:1; padding:8px 9px;}
+  .finish-err{color:var(--brand); font-size:11px; width:100%; margin-top:-2px;}
+  .badge-log{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
+  .badge{font-size:11.5px; padding:4px 9px; border-radius:20px; background:var(--gold-bg); color:var(--gold); font-weight:600; cursor:pointer;}
+  .badge.brand{background:#fbf1f1; color:var(--brand);}
+  .section-label{font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.03em; margin:18px 0 8px;}
+  .section-label:first-child{margin-top:0;}
+  .status-tag{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-top:6px;}
+  .status-tag.progress{background:#fff3d6; color:#8a6a12;}
+  .status-tag.notstarted{background:#eef0f3; color:var(--sub);}
+  .status-tag.submitted{background:var(--ok-bg); color:var(--ok);}
+  .draft-banner{background:#eef2ff; border:1px solid #c9d2f5; color:#3b4a9c; font-size:12.5px; padding:10px 12px; border-radius:10px; margin-bottom:16px;}
+  .autosave-msg{font-size:11.5px; color:var(--ok); height:16px; margin:6px 0 2px; opacity:0; transition:opacity .2s;}
+  .autosave-msg.show{opacity:1;}
+  .err-banner{background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:12.5px; padding:10px 12px; border-radius:10px; margin-bottom:14px; display:none;}
+  .spinner{display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:6px; vertical-align:-2px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app"><a href="index.html" style="color:inherit; text-decoration:none;">Market Cross Darts League</a><small>Captain results portal</small></header>
+  <div class="err-banner" id="errBanner"></div>
+
+  <!-- STEP 0: season access code -->
+  <div class="card" id="step0">
+    <h2>Enter this season's access code</h2>
+    <p class="sub">Your league admin sets this at the start of the season — ask them if you don't have it. You'll only need to enter it once on this device.</p>
+    <div class="field">
+      <label>Access code</label>
+      <input type="text" id="passcodeInput" inputmode="numeric" autocomplete="off" placeholder="Access code">
+    </div>
+    <div class="finish-err" id="passcodeErr" style="display:none;"></div>
+    <button class="btn-primary" id="passcodeContinue" onclick="checkPasscodeAndEnter()">Continue →</button>
+  </div>
+
+  <!-- STEP 1: fixture -->
+  <div class="card hidden" id="step1">
+    <div class="steps"><span class="done"></span><span></span><span></span><span></span></div>
+    <h2>Step 1 · Pick your fixture</h2>
+    <p class="sub">Choose your team, then this week's match.</p>
+    <div class="field">
+      <label>Your team</label>
+      <select id="teamSelect"><option value="">Loading teams…</option></select>
+    </div>
+    <div class="field">
+      <label>Fixture</label>
+      <div id="fixtureList"><p class="sub">Pick a team first.</p></div>
+    </div>
+    <button class="btn-primary" id="step1Continue" disabled onclick="goToRoster()">Continue →</button>
+  </div>
+
+  <!-- STEP 2: roster -->
+  <div class="card hidden" id="step2">
+    <div class="steps"><span class="done"></span><span class="done"></span><span></span><span></span></div>
+    <h2>Step 2 · Squads</h2>
+    <p class="sub">Check both squads below — is anyone missing? Add them before you start entering results.</p>
+
+    <div class="section-label" id="myRosterLabel">Your team</div>
+    <div id="rosterList"></div>
+    <div class="add-player-row">
+      <input type="text" id="newPlayerName" placeholder="Add a player not listed…">
+      <button class="btn-secondary" onclick="addPlayer()">Add</button>
+    </div>
+    <div class="finish-err" id="nameErr" style="display:none;"></div>
+
+    <div class="section-label" id="oppRosterLabel"></div>
+    <div id="oppRosterList"></div>
+    <div class="add-player-row">
+      <input type="text" id="newOppPlayerName" placeholder="Add a player for the opposing team…">
+      <button class="btn-secondary" onclick="addOppPlayer()">Add</button>
+    </div>
+    <div class="finish-err" id="oppNameErr" style="display:none;"></div>
+
+    <button class="btn-primary" onclick="goToResults()">Continue →</button>
+    <button class="backline" onclick="showStep(1)">← Back</button>
+  </div>
+
+  <!-- STEP 3: results -->
+  <div class="card hidden" id="step3">
+    <div class="steps"><span class="done"></span><span class="done"></span><span class="done"></span><span></span></div>
+    <h2>Step 3 · Enter results</h2>
+    <p class="sub">3 pairs games, then 6 singles — 9 games, 1 point each. Log a 180 or 100+ finish right on the game it happened in.</p>
+    <div class="draft-banner" id="draftBanner"></div>
+    <div id="legList"></div>
+    <div class="autosave-msg" id="autosaveMsg">✓ Saved</div>
+    <div class="section-label">Logged this match</div>
+    <div class="badge-log" id="badgeLog"></div>
+    <button class="btn-primary" onclick="showStep(4); renderReview();">Review &amp; submit →</button>
+    <button class="backline" onclick="showStep(2)">← Back</button>
+  </div>
+
+  <!-- STEP 4: review -->
+  <div class="card hidden" id="step4">
+    <div class="steps"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span></div>
+    <h2>Step 4 · Review before submitting</h2>
+    <p class="sub" id="reviewFixtureLabel"></p>
+    <div class="section-label">Games</div>
+    <div id="reviewLegs"></div>
+    <div class="section-label">180s</div>
+    <div id="review180s"></div>
+    <div class="section-label">100+ Finishes</div>
+    <div id="reviewFinishes"></div>
+    <div class="draft-banner">Everything above has already been saved as you went. Submitting just marks this fixture final and pushes it into the league table — no emails are sent. If a mistake turns up after, ask the league admin to reopen it.</div>
+    <button class="btn-primary" id="submitBtn" onclick="submitResult()">Submit final result</button>
+    <button class="backline" onclick="showStep(3)">← Back and fix something</button>
+  </div>
+
+  <!-- STEP 5: confirm -->
+  <div class="card hidden" id="step5">
+    <div class="confirm-box">
+      <div class="tick">✅</div>
+      <h2>Result submitted</h2>
+      <p id="confirmSummary"></p>
+      <button class="btn-ghost" onclick="location.reload()" style="margin-top:16px;">Submit another fixture</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script>
+// callRpc(), getStoredPasscode(), setStoredPasscode() and clearStoredPasscode() all
+// come from assets/data.js — shared with admin.html so both pages agree on how the
+// access code is stored, and both talk to the Apps Script backend the same way.
+function showError(err) {
+  const msg = (err && err.message) ? err.message : String(err);
+  const el = document.getElementById('errBanner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+// ---------- STEP 0: season access code ----------
+// Stored in this browser's localStorage once entered correctly, so captains only
+// have to type it in on a given phone/computer the first time they use the portal.
+
+function enterApp() {
+  document.getElementById('step0').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
+}
+
+async function checkPasscodeAndEnter(codeOverride) {
+  const btn = document.getElementById('passcodeContinue');
+  const input = document.getElementById('passcodeInput');
+  const err = document.getElementById('passcodeErr');
+  const silent = codeOverride !== undefined;
+  const code = silent ? codeOverride : input.value.trim();
+  if (!code) {
+    err.textContent = 'Enter the access code your league admin gave you.';
+    err.style.display = 'block';
+    return;
+  }
+  if (!silent) { btn.disabled = true; btn.textContent = 'Checking…'; }
+  try {
+    await callRpc('checkPasscode', code);
+    setStoredPasscode(code);
+    err.style.display = 'none';
+    enterApp();
+  } catch (e) {
+    clearStoredPasscode();
+    err.textContent = (e && e.message) ? e.message : "That code isn't right — check with your league admin.";
+    err.style.display = 'block';
+  } finally {
+    if (!silent) { btn.disabled = false; btn.textContent = 'Continue →'; }
+  }
+}
+
+document.getElementById('passcodeInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkPasscodeAndEnter();
+});
+
+(function initPasscodeGate() {
+  const saved = getStoredPasscode();
+  if (saved) checkPasscodeAndEnter(saved);
+})();
+
+// ---------- state ----------
+let state = {
+  myTeam: null,
+  fixtures: [],
+  fixture: null,        // {fixtureId, isHome, opponent, date, status}
+  myRoster: [],          // [{name, playing}]
+  oppRoster: [],          // [name, ...]
+  games: [],              // [{n, type, myP1, myP2, oppP1, oppP2, winner:'us'|'them'|null, score}]
+  statLog: [],            // [{statId, name, type:'180'|'finish', value}]
+};
+let finishEditor = null; // {name, statId|null} — statId null means adding a new one
+
+// ---------- STEP 1: team + fixture ----------
+callRpc('getTeams').then(teams => {
+  const sel = document.getElementById('teamSelect');
+  sel.innerHTML = '<option value="">Select your team…</option>' + teams.map(t => `<option>${t}</option>`).join('');
+}).catch(showError);
+
+document.getElementById('teamSelect').addEventListener('change', async (e) => {
+  state.myTeam = e.target.value;
+  state.fixture = null;
+  document.getElementById('step1Continue').disabled = true;
+  const list = document.getElementById('fixtureList');
+  if (!state.myTeam) { list.innerHTML = '<p class="sub">Pick a team first.</p>'; return; }
+  list.innerHTML = '<p class="sub">Loading fixtures…</p>';
+  try {
+    state.fixtures = await callRpc('getFixturesForTeam', state.myTeam);
+    renderFixtureList();
+  } catch (err) { showError(err); }
+});
+
+function renderFixtureList() {
+  const list = document.getElementById('fixtureList');
+  if (state.fixtures.length === 0) { list.innerHTML = '<p class="sub">No fixtures found for this team yet.</p>'; return; }
+  list.innerHTML = '';
+  state.fixtures.forEach(f => {
+    const div = document.createElement('div');
+    const isSubmitted = f.status === 'Submitted';
+    div.className = 'fixture-option' + (isSubmitted ? ' disabled' : '') + (state.fixture && state.fixture.fixtureId === f.fixtureId ? ' selected' : '');
+    const statusHtml = isSubmitted
+      ? `<div class="status-tag submitted">✅ Submitted</div>`
+      : f.gamesEntered > 0
+        ? `<div class="status-tag progress">🟡 In progress · ${f.gamesEntered} of ${f.gamesTotal} games entered</div>`
+        : `<div class="status-tag notstarted">Not started</div>`;
+    div.innerHTML = `<div class="vs">${f.isHome ? 'You' : f.opponent} <span style="color:var(--sub);font-weight:400;">vs</span> ${f.isHome ? f.opponent : 'You'}</div>
+      <div class="meta">${f.date} · ${f.isHome ? 'Home' : 'Away'}</div>${statusHtml}`;
+    div.onclick = () => {
+      if (isSubmitted) { showError('This fixture has already been submitted. Ask the league admin to reopen it if it needs a change.'); return; }
+      state.fixture = f;
+      document.getElementById('step1Continue').disabled = false;
+      renderFixtureList();
+    };
+    list.appendChild(div);
+  });
+}
+
+// ---------- STEP 2: roster ----------
+async function goToRoster() {
+  const btn = document.getElementById('step1Continue');
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Loading…';
+
+  let roster, oppRoster, draft;
+  try {
+    roster = await callRpc('getRoster', state.myTeam);
+  } catch (err) {
+    showError('[loading your roster] ' + (err && err.message ? err.message : err));
+    btn.disabled = false; btn.textContent = originalLabel; return;
+  }
+  try {
+    oppRoster = await callRpc('getRoster', state.fixture.opponent);
+  } catch (err) {
+    showError('[loading the opponent roster] ' + (err && err.message ? err.message : err));
+    btn.disabled = false; btn.textContent = originalLabel; return;
+  }
+  try {
+    draft = await callRpc('getFixtureDraft', state.fixture.fixtureId);
+    // getFixtureDraft's result is itself a JSON string (a leftover from an old
+    // google.script.run serialization quirk) — harmless to keep, just parse it once more.
+    draft = JSON.parse(draft);
+  } catch (err) {
+    showError('[loading this fixture] ' + (err && err.message ? err.message : err));
+    btn.disabled = false; btn.textContent = originalLabel; return;
+  }
+
+  state.myRoster = roster;
+  state.oppRoster = oppRoster;
+  try {
+    hydrateDraft(draft);
+  } catch (err) {
+    showError('[preparing this fixture] ' + (err && err.message ? err.message : err) + ' — please screenshot this exact message for Claude.');
+    btn.disabled = false; btn.textContent = originalLabel; return;
+  }
+  document.getElementById('myRosterLabel').textContent = `Your team (${state.myTeam})`;
+  document.getElementById('oppRosterLabel').textContent = state.fixture.opponent;
+  btn.disabled = false; btn.textContent = originalLabel;
+  showStep(2);
+  renderStaticList('rosterList', state.myRoster);
+  renderStaticList('oppRosterList', state.oppRoster);
+}
+
+function hydrateDraft(draft) {
+  if (!draft || !Array.isArray(draft.games) || !Array.isArray(draft.stats)) {
+    throw new Error('unexpected data shape: ' + JSON.stringify(draft));
+  }
+  const isHome = state.fixture.isHome;
+  state.games = draft.games.map(g => ({
+    n: g.GameNumber, type: g.Type,
+    myP1: isHome ? g.HomePlayer1 : g.AwayPlayer1, myP2: isHome ? g.HomePlayer2 : g.AwayPlayer2,
+    oppP1: isHome ? g.AwayPlayer1 : g.HomePlayer1, oppP2: isHome ? g.AwayPlayer2 : g.HomePlayer2,
+    winner: !g.Winner ? null : (g.Winner === 'Home') === isHome ? 'us' : 'them',
+    score: g.Score || null,
+  }));
+  // String(...) — Sheets can hand back a "180" entry as the number 180 instead of text,
+  // which would otherwise stop it matching the `type === '180'` checks used throughout below.
+  state.statLog = draft.stats.map(s => ({ statId: s.StatID, name: s.PlayerName, type: String(s.Type), value: s.Value }));
+  const enteredByOther = state.games.filter(g => g.winner).length;
+  const banner = document.getElementById('draftBanner');
+  if (enteredByOther > 0) {
+    banner.style.display = 'block';
+    banner.textContent = `📝 Picking up an in-progress result — ${enteredByOther} of 9 games already entered. Everything saves itself as you go, so either captain can carry on from here. Picked the wrong player? Just change the dropdown — nothing's locked until you submit.`;
+  } else {
+    banner.style.display = 'block';
+    banner.textContent = `Everything you enter here saves itself instantly, so either captain can close this and come back later to carry on.`;
+  }
+}
+
+function renderStaticList(elementId, names) {
+  const list = document.getElementById(elementId);
+  list.innerHTML = '';
+  if (names.length === 0) { list.innerHTML = '<p class="sub">No players added yet.</p>'; return; }
+  names.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'roster-row';
+    row.innerHTML = `<span class="name">${name}</span>`;
+    list.appendChild(row);
+  });
+}
+
+async function addPlayer() {
+  const input = document.getElementById('newPlayerName');
+  const errEl = document.getElementById('nameErr');
+  const name = input.value.trim().replace(/\s+/g, ' ');
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length < 2 || parts.some(p => p.length < 2)) {
+    errEl.textContent = 'Please enter a first name and surname.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  try {
+    state.myRoster = await callRpc('addPlayer', state.myTeam, name);
+    input.value = '';
+    renderStaticList('rosterList', state.myRoster);
+  } catch (err) { showError(err); }
+}
+
+async function addOppPlayer() {
+  const input = document.getElementById('newOppPlayerName');
+  const errEl = document.getElementById('oppNameErr');
+  const name = input.value.trim().replace(/\s+/g, ' ');
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length < 2 || parts.some(p => p.length < 2)) {
+    errEl.textContent = 'Please enter a first name and surname.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  try {
+    state.oppRoster = await callRpc('addPlayer', state.fixture.opponent, name);
+    input.value = '';
+    renderStaticList('oppRosterList', state.oppRoster);
+  } catch (err) { showError(err); }
+}
+
+// ---------- STEP 3: results ----------
+function statCount(name, type) { return state.statLog.filter(e => e.name === name && e.type === type).length; }
+
+function goToResults() { showStep(3); renderGames(); }
+
+function saveGameToServer(g) {
+  const isHome = state.fixture.isHome;
+  const payload = {
+    homePlayer1: isHome ? g.myP1 : g.oppP1, homePlayer2: isHome ? g.myP2 : g.oppP2,
+    awayPlayer1: isHome ? g.oppP1 : g.myP1, awayPlayer2: isHome ? g.oppP2 : g.myP2,
+    winner: g.winner ? ((g.winner === 'us') === isHome ? 'Home' : 'Away') : '',
+    score: g.score || '',
+  };
+  flashSaving();
+  callRpc('saveGame', state.fixture.fixtureId, g.n, payload).then(flashSaved).catch(showError);
+}
+function flashSaving() {
+  const el = document.getElementById('autosaveMsg');
+  el.textContent = 'Saving…'; el.classList.add('show');
+}
+function flashSaved() {
+  const el = document.getElementById('autosaveMsg');
+  el.textContent = '✓ Saved'; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 1400);
+}
+
+function renderGames() {
+  const myActive = state.myRoster;
+  const list = document.getElementById('legList');
+  list.innerHTML = '';
+  state.games.forEach((g) => {
+    const named = g.type === 'Pairs' ? [g.myP1, g.myP2, g.oppP1, g.oppP2].filter(Boolean) : [g.myP1, g.oppP1].filter(Boolean);
+    const block = document.createElement('div');
+    block.className = 'leg-block';
+    const tag = (g.type === 'Pairs' ? 'Pairs ' : 'Singles ') + (g.type === 'Pairs' ? g.n : g.n - 3);
+    const myFields = g.type === 'Pairs'
+      ? `<select data-n="${g.n}" data-role="myP1">${opts(myActive, g.myP1)}</select><select data-n="${g.n}" data-role="myP2">${opts(myActive, g.myP2)}</select>`
+      : `<select data-n="${g.n}" data-role="myP1">${opts(myActive, g.myP1)}</select>`;
+    const oppFields = g.type === 'Pairs'
+      ? `<select data-n="${g.n}" data-role="oppP1">${opts(state.oppRoster, g.oppP1)}</select><select data-n="${g.n}" data-role="oppP2">${opts(state.oppRoster, g.oppP2)}</select>`
+      : `<select data-n="${g.n}" data-role="oppP1">${opts(state.oppRoster, g.oppP1)}</select>`;
+    block.innerHTML = `<div class="leg-title">${tag}<span class="tag">${g.type.toUpperCase()}</span></div>
+      <div class="leg-players">
+        <div class="side"><div class="side-label">You</div>${myFields}</div>
+        <span class="vsmall">vs</span>
+        <div class="side"><div class="side-label">${state.fixture.opponent}</div>${oppFields}</div>
+      </div>
+      ${winnerScoreHtml(g)}
+      ${bigScoresHtml(named, g.n)}`;
+    list.appendChild(block);
+  });
+
+  list.querySelectorAll('select').forEach(sel => {
+    sel.onchange = () => {
+      const g = state.games.find(x => x.n == sel.dataset.n);
+      g[sel.dataset.role] = sel.value;
+      saveGameToServer(g);
+      renderGames();
+    };
+  });
+  list.querySelectorAll('.winner-btn').forEach(btn => {
+    btn.onclick = () => {
+      const g = state.games.find(x => x.n == btn.dataset.n);
+      g.winner = btn.dataset.w; g.score = null;
+      saveGameToServer(g);
+      renderGames();
+    };
+  });
+  list.querySelectorAll('.score-btn').forEach(btn => {
+    btn.onclick = () => {
+      const g = state.games.find(x => x.n == btn.dataset.n);
+      g.score = btn.dataset.s;
+      saveGameToServer(g);
+      renderGames();
+    };
+  });
+  wireStatHandlers(list, renderGames);
+  renderBadgeLog();
+}
+
+function opts(arr, selected) {
+  let html = `<option value="">Select player…</option>`;
+  arr.forEach(n => { html += `<option ${n === selected ? 'selected' : ''}>${n}</option>`; });
+  return html;
+}
+function winnerScoreHtml(g) {
+  let html = `<div class="winner-pick">
+      <div class="winner-btn ${g.winner === 'us' ? 'chosen' : ''}" data-n="${g.n}" data-w="us">We won</div>
+      <div class="winner-btn ${g.winner === 'them' ? 'chosen' : ''}" data-n="${g.n}" data-w="them">They won</div>
+    </div>`;
+  if (g.winner) {
+    html += `<div class="score-pick">
+        <div class="score-btn ${g.score === '2-0' ? 'chosen' : ''}" data-n="${g.n}" data-s="2-0">2 – 0</div>
+        <div class="score-btn ${g.score === '2-1' ? 'chosen' : ''}" data-n="${g.n}" data-s="2-1">2 – 1</div>
+      </div>`;
+  }
+  return html;
+}
+
+// ---------- 180s / 100+ finishes (shared by results + review) ----------
+function bigScoresHtml(namedPlayers, gameN) {
+  if (namedPlayers.length === 0) return '';
+  let html = `<div class="big-scores"><div class="bs-label">180s / 100+ finishes</div>`;
+  namedPlayers.forEach(name => {
+    const c180 = statCount(name, '180');
+    const finishes = state.statLog.filter(e => e.name === name && e.type === 'finish');
+    html += `<div class="bs-row">
+        <span class="bs-name">${name}</span>
+        <div class="stepper">
+          <button data-stepdown="${name}" ${c180 === 0 ? 'disabled' : ''}>−</button>
+          <span class="count">${c180} × 180</span>
+          <button data-stepup="${name}">+</button>
+        </div>
+      </div>
+      <div class="bs-row">
+        <span class="bs-name"></span>
+        ${finishes.map(e => `<div class="finish-chip" data-stat-id="${e.statId}" data-game="${gameN}">${e.value} ✕</div>`).join('')}
+        <div class="finish-add" data-addfinish="${name}" data-game="${gameN}">+ 100+ finish</div>
+      </div>`;
+    // Scoped to this exact game occurrence (not just the player name) — a player who
+    // plays in more than one game must only get ONE open editor at a time, otherwise
+    // the same #finishInput/#finishSaveBtn ids get duplicated across game blocks and
+    // clicks/typing silently land on the wrong (unwired) copy.
+    if (finishEditor && finishEditor.name === name && finishEditor.gameN === gameN) {
+      const editing = !!finishEditor.statId;
+      const currentEntry = editing ? state.statLog.find(e => e.statId === finishEditor.statId) : null;
+      html += `<div class="finish-panel">
+          <input type="number" min="100" max="170" placeholder="Checkout, e.g. 121" id="finishInput" value="${currentEntry ? currentEntry.value : ''}">
+          <button class="btn-secondary" id="finishSaveBtn" style="padding:8px 12px;">${editing ? 'Save' : 'Add'}</button>
+          ${editing ? '<button class="btn-ghost" id="finishDeleteBtn" style="padding:8px 10px; color:var(--brand); border-color:var(--brand);">Delete</button>' : ''}
+          <button class="btn-ghost" id="finishCancelBtn" style="padding:8px 10px;">✕</button>
+        </div>
+        <div class="finish-err" id="finishErr" style="display:none;">Enter a checkout between 100 and 170</div>`;
+    }
+  });
+  html += `</div>`;
+  return html;
+}
+
+function wireStatHandlers(container, rerender) {
+  container.querySelectorAll('[data-stepup]').forEach(btn => {
+    btn.onclick = async () => {
+      const name = btn.dataset.stepup;
+      try {
+        const statId = await callRpc('addStat', state.fixture.fixtureId, name, '180', '');
+        state.statLog.push({ statId, name, type: '180', value: '' });
+        flashSaved(); rerender();
+      } catch (err) { showError(err); }
+    };
+  });
+  container.querySelectorAll('[data-stepdown]').forEach(btn => {
+    btn.onclick = async () => {
+      const name = btn.dataset.stepdown;
+      let last = null;
+      state.statLog.forEach(e => { if (e.name === name && e.type === '180') last = e; });
+      if (!last) return;
+      try {
+        await callRpc('deleteStat', last.statId);
+        state.statLog = state.statLog.filter(e => e !== last);
+        flashSaved(); rerender();
+      } catch (err) { showError(err); }
+    };
+  });
+  container.querySelectorAll('[data-addfinish]').forEach(btn => {
+    btn.onclick = () => {
+      const name = btn.dataset.addfinish;
+      const gameN = Number(btn.dataset.game);
+      finishEditor = (finishEditor && finishEditor.name === name && finishEditor.gameN === gameN && !finishEditor.statId) ? null : { name, gameN, statId: null };
+      rerender();
+    };
+  });
+  container.querySelectorAll('.finish-chip').forEach(chip => {
+    chip.onclick = () => {
+      const statId = chip.dataset.statId;
+      const gameN = Number(chip.dataset.game);
+      const entry = state.statLog.find(e => e.statId === statId);
+      finishEditor = (finishEditor && finishEditor.statId === statId) ? null : { name: entry.name, gameN, statId };
+      rerender();
+    };
+  });
+  const saveBtn = container.querySelector('#finishSaveBtn') || document.getElementById('finishSaveBtn');
+  if (saveBtn) saveBtn.onclick = () => saveFinish(rerender);
+  const delBtn = container.querySelector('#finishDeleteBtn') || document.getElementById('finishDeleteBtn');
+  if (delBtn) delBtn.onclick = () => deleteFinish(rerender);
+  const cancelBtn = container.querySelector('#finishCancelBtn') || document.getElementById('finishCancelBtn');
+  if (cancelBtn) cancelBtn.onclick = () => { finishEditor = null; rerender(); };
+  const finishInput = document.getElementById('finishInput');
+  if (finishInput) finishInput.onkeydown = (e) => { if (e.key === 'Enter') saveFinish(rerender); };
+}
+
+async function saveFinish(rerender) {
+  const input = document.getElementById('finishInput');
+  const v = parseInt(input.value, 10);
+  if (!v || v < 100 || v > 170) { document.getElementById('finishErr').style.display = 'block'; return; }
+  try {
+    if (finishEditor.statId) {
+      await callRpc('updateStat', finishEditor.statId, v);
+      const entry = state.statLog.find(e => e.statId === finishEditor.statId);
+      entry.value = v;
+    } else {
+      const statId = await callRpc('addStat', state.fixture.fixtureId, finishEditor.name, 'finish', v);
+      state.statLog.push({ statId, name: finishEditor.name, type: 'finish', value: v });
+    }
+    finishEditor = null;
+    flashSaved(); rerender();
+  } catch (err) { showError(err); }
+}
+async function deleteFinish(rerender) {
+  if (!finishEditor || !finishEditor.statId) return;
+  try {
+    await callRpc('deleteStat', finishEditor.statId);
+    state.statLog = state.statLog.filter(e => e.statId !== finishEditor.statId);
+    finishEditor = null;
+    flashSaved(); rerender();
+  } catch (err) { showError(err); }
+}
+
+function renderBadgeLog() {
+  const log = document.getElementById('badgeLog');
+  log.innerHTML = '';
+  if (state.statLog.length === 0) { log.innerHTML = '<span style="color:var(--sub); font-size:12.5px;">Nothing logged yet</span>'; return; }
+  state.statLog.forEach(entry => {
+    const b = document.createElement('span');
+    b.className = 'badge' + (entry.type === '180' ? ' brand' : '');
+    b.textContent = entry.type === '180' ? `${entry.name} · 180 ✕` : `${entry.name} · 100+ (${entry.value}) ✕`;
+    b.title = 'Tap to remove';
+    b.onclick = async () => {
+      try {
+        await callRpc('deleteStat', entry.statId);
+        state.statLog = state.statLog.filter(e => e !== entry);
+        renderGames();
+      } catch (err) { showError(err); }
+    };
+    log.appendChild(b);
+  });
+}
+
+// ---------- STEP 4: review ----------
+// A game only counts as done once every player it needs is picked AND it has
+// both a winner and a leg score — partial entries must not silently count.
+function isGameComplete(g) {
+  if (!g.myP1 || !g.oppP1) return false;
+  if (g.type === 'Pairs' && (!g.myP2 || !g.oppP2)) return false;
+  return !!(g.winner && g.score);
+}
+
+function renderReview() {
+  document.getElementById('reviewFixtureLabel').textContent =
+    `${state.fixture.isHome ? 'You' : state.fixture.opponent} vs ${state.fixture.isHome ? state.fixture.opponent : 'You'} · ${state.fixture.date}`;
+
+  const legList = document.getElementById('reviewLegs');
+  legList.innerHTML = '';
+  let usWins = 0, themWins = 0;
+  state.games.forEach(g => {
+    const complete = isGameComplete(g);
+    if (complete && g.winner === 'us') usWins++;
+    if (complete && g.winner === 'them') themWins++;
+    const tag = (g.type === 'Pairs' ? 'Pairs ' : 'Singles ') + (g.type === 'Pairs' ? g.n : g.n - 3);
+    const myWho = g.type === 'Pairs' ? `${g.myP1 || '—'} & ${g.myP2 || '—'}` : (g.myP1 || '—');
+    const oppWho = g.type === 'Pairs' ? `${g.oppP1 || '—'} & ${g.oppP2 || '—'}` : (g.oppP1 || '—');
+    let scoreText = '—';
+    if (complete) {
+      const [winLegs, loseLegs] = g.score.split('-');
+      const myLegs = g.winner === 'us' ? winLegs : loseLegs;
+      const oppLegs = g.winner === 'us' ? loseLegs : winLegs;
+      scoreText = `${myLegs} – ${oppLegs}`;
+    } else if (g.winner || g.myP1 || g.oppP1) {
+      scoreText = 'Incomplete';
+    }
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    if (!complete) row.style.color = '#b3261e';
+    row.innerHTML = `<span>${tag}: ${myWho} vs ${oppWho}</span><span>${scoreText}</span>`;
+    legList.appendChild(row);
+  });
+  const total = document.createElement('div');
+  total.className = 'summary-row'; total.style.fontWeight = '700';
+  total.innerHTML = `<span>Match score</span><span>${usWins} – ${themWins}</span>`;
+  legList.appendChild(total);
+
+  const box180 = document.getElementById('review180s');
+  const boxFinishes = document.getElementById('reviewFinishes');
+  box180.innerHTML = '';
+  boxFinishes.innerHTML = '';
+  const namesWith180 = [...new Set(state.statLog.filter(e => e.type === '180').map(e => e.name))];
+  const namesWithFinish = [...new Set(state.statLog.filter(e => e.type === 'finish').map(e => e.name))];
+
+  if (namesWith180.length === 0) {
+    box180.innerHTML = '<div class="summary-row"><span style="color:var(--sub);">None logged</span></div>';
+  }
+  namesWith180.forEach(n => {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML = `<span>${n}</span><span>${statCount(n, '180')}× 180</span>`;
+    box180.appendChild(row);
+  });
+
+  if (namesWithFinish.length === 0) {
+    boxFinishes.innerHTML = '<div class="summary-row"><span style="color:var(--sub);">None logged</span></div>';
+  }
+  namesWithFinish.forEach(n => {
+    const finishes = state.statLog.filter(e => e.name === n && e.type === 'finish').map(e => e.value);
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML = `<span>${n}</span><span>${finishes.join(', ')}</span>`;
+    boxFinishes.appendChild(row);
+  });
+
+  const entered = state.games.filter(isGameComplete).length;
+  const btn = document.getElementById('submitBtn');
+  if (entered < 9) {
+    btn.disabled = true;
+    btn.textContent = `${9 - entered} game${9 - entered === 1 ? '' : 's'} still need a player and result`;
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Submit final result';
+  }
+}
+
+async function submitResult() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Submitting…';
+  try {
+    const result = await callRpc('submitFixture', state.fixture.fixtureId);
+    const myPoints = state.fixture.isHome ? result.homePoints : result.awayPoints;
+    const theirPoints = state.fixture.isHome ? result.awayPoints : result.homePoints;
+    document.getElementById('confirmSummary').innerHTML =
+      `You ${myPoints} – ${theirPoints} ${state.fixture.opponent}<br>
+       (${result.gamesEntered} of ${result.gamesTotal} games had a result recorded)<br><br>
+       The league table has been updated. No emails were sent — this is now the official record.`;
+    showStep(5);
+  } catch (err) {
+    showError(err);
+    btn.disabled = false;
+    btn.textContent = 'Submit final result';
+  }
+}
+
+// ---------- step visibility ----------
+function showStep(n) {
+  for (let i = 1; i <= 5; i++) document.getElementById('step' + i).classList.toggle('hidden', i !== n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

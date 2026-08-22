@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Cross Darts League — Player Admin</title>
+<style>
+  :root{
+    --ink:#1c1f26; --sub:#5c6270; --line:#e3e5ea; --bg:#f6f7f9; --card:#ffffff;
+    --brand:#8b2f2f; --brand-ink:#ffffff; --ok:#2f7a4f; --ok-bg:#e9f6ee; --gold:#a9781f; --gold-bg:#fbf1dd;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink);}
+  .wrap{max-width:460px; margin:0 auto; padding:0 12px 48px;}
+  header.app{background:var(--brand); color:var(--brand-ink); padding:18px 20px; border-radius:0 0 var(--radius) var(--radius); font-weight:700; font-size:17px; margin-bottom:14px;}
+  header.app small{display:block; font-weight:400; font-size:12px; opacity:.85; margin-top:2px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px;}
+  h2{font-size:16px; margin:0 0 4px;}
+  p.sub{color:var(--sub); font-size:13px; margin:0 0 16px;}
+  .field{margin-bottom:16px;}
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:6px; text-transform:uppercase; letter-spacing:.02em;}
+  select, input[type=text]{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px; font-size:15px; background:#fff; color:var(--ink);}
+  .roster-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line);}
+  .roster-row:last-child{border-bottom:none;}
+  .roster-row.archived{opacity:.55;}
+  .toggle{width:44px; height:26px; border-radius:20px; background:var(--line); position:relative; cursor:pointer; flex-shrink:0;}
+  .toggle.on{background:var(--ok);}
+  .toggle .knob{width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:left .15s; box-shadow:0 1px 2px rgba(0,0,0,.25);}
+  .toggle.on .knob{left:21px;}
+  .add-player-row{display:flex; gap:8px; margin-top:14px;}
+  .add-player-row input{flex:1;}
+  button{font-family:inherit; font-size:14.5px; font-weight:600; border-radius:10px; border:none; cursor:pointer; padding:11px 16px;}
+  button:disabled{opacity:.5; cursor:default;}
+  .btn-primary{background:var(--brand); color:#fff; width:100%; margin-top:18px;}
+  .btn-secondary{background:#eef0f3; color:var(--ink);}
+  .status-tag{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-top:4px;}
+  .status-tag.archived{background:#eef0f3; color:var(--sub);}
+  .section-label{font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.03em; margin:18px 0 8px;}
+  .section-label:first-child{margin-top:0;}
+  .finish-err{color:var(--brand); font-size:11px; width:100%; margin-top:-2px;}
+  .err-banner{background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:12.5px; padding:10px 12px; border-radius:10px; margin-bottom:14px; display:none;}
+  .autosave-msg{font-size:11.5px; color:var(--ok); height:16px; margin:6px 0 2px; opacity:0; transition:opacity .2s;}
+  .autosave-msg.show{opacity:1;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app"><a href="index.html" style="color:inherit; text-decoration:none;">Market Cross Darts League</a><small>Player admin</small></header>
+  <div class="err-banner" id="errBanner"></div>
+
+  <!-- GATE: access code -->
+  <div class="card" id="gate">
+    <h2>Enter this season's access code</h2>
+    <p class="sub">Same code as the captains' results portal. You'll only need to enter it once on this device.</p>
+    <div class="field">
+      <label>Access code</label>
+      <input type="text" id="passcodeInput" inputmode="numeric" autocomplete="off" placeholder="Access code">
+    </div>
+    <div class="finish-err" id="passcodeErr" style="display:none;"></div>
+    <button class="btn-primary" id="passcodeContinue" onclick="checkPasscodeAndEnter()">Continue →</button>
+  </div>
+
+  <!-- MAIN: player admin -->
+  <div class="card hidden" id="main">
+    <h2>Add and archive players</h2>
+    <p class="sub">Archived players stay on record but won't be selectable when captains enter results. Unarchive to bring someone back.</p>
+
+    <div class="field">
+      <label>Team</label>
+      <select id="teamSelect"><option value="">Loading teams…</option></select>
+    </div>
+
+    <div id="rosterSection" class="hidden">
+      <div class="section-label">Players</div>
+      <div id="playerList"></div>
+      <div class="autosave-msg" id="autosaveMsg">✓ Saved</div>
+
+      <div class="add-player-row">
+        <input type="text" id="newPlayerName" placeholder="Add a player… (first name + surname)">
+        <button class="btn-secondary" id="addPlayerBtn" onclick="addPlayer()">Add</button>
+      </div>
+      <div class="finish-err" id="nameErr" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script>
+// callRpc(), getStoredPasscode(), setStoredPasscode() and clearStoredPasscode() all
+// come from assets/data.js — shared with portal.html, so entering the code once on
+// either page unlocks both on that device (same localStorage key, same origin now
+// that both pages live on this site rather than being served by Apps Script).
+function showError(err) {
+  const msg = (err && err.message) ? err.message : String(err);
+  const el = document.getElementById('errBanner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+function flashSaved() {
+  const el = document.getElementById('autosaveMsg');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+// ---------- GATE: access code ----------
+
+function enterApp() {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('main').classList.remove('hidden');
+}
+
+async function checkPasscodeAndEnter(codeOverride) {
+  const btn = document.getElementById('passcodeContinue');
+  const input = document.getElementById('passcodeInput');
+  const err = document.getElementById('passcodeErr');
+  const silent = codeOverride !== undefined;
+  const code = silent ? codeOverride : input.value.trim();
+  if (!code) {
+    err.textContent = 'Enter the access code your league admin gave you.';
+    err.style.display = 'block';
+    return;
+  }
+  if (!silent) { btn.disabled = true; btn.textContent = 'Checking…'; }
+  try {
+    await callRpc('checkPasscode', code);
+    setStoredPasscode(code);
+    err.style.display = 'none';
+    enterApp();
+  } catch (e) {
+    clearStoredPasscode();
+    err.textContent = (e && e.message) ? e.message : "That code isn't right — check with your league admin.";
+    err.style.display = 'block';
+  } finally {
+    if (!silent) { btn.disabled = false; btn.textContent = 'Continue →'; }
+  }
+}
+
+document.getElementById('passcodeInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkPasscodeAndEnter();
+});
+
+(function initPasscodeGate() {
+  const saved = getStoredPasscode();
+  if (saved) checkPasscodeAndEnter(saved);
+})();
+
+// ---------- MAIN: roster management ----------
+let currentTeam = null;
+
+callRpc('getTeams').then(teams => {
+  const sel = document.getElementById('teamSelect');
+  sel.innerHTML = '<option value="">Select a team…</option>' + teams.map(t => `<option>${t}</option>`).join('');
+}).catch(showError);
+
+document.getElementById('teamSelect').addEventListener('change', async (e) => {
+  currentTeam = e.target.value;
+  const section = document.getElementById('rosterSection');
+  if (!currentTeam) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  await refreshRoster();
+});
+
+async function refreshRoster() {
+  const list = document.getElementById('playerList');
+  list.innerHTML = '<p class="sub">Loading…</p>';
+  try {
+    const roster = await callRpc('getAdminRoster', currentTeam);
+    renderRoster(roster);
+  } catch (err) {
+    showError(err);
+  }
+}
+
+function renderRoster(roster) {
+  const list = document.getElementById('playerList');
+  list.innerHTML = '';
+  if (roster.length === 0) {
+    list.innerHTML = '<p class="sub">No players yet — add the first one below.</p>';
+    return;
+  }
+  roster.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'roster-row' + (p.archived ? ' archived' : '');
+    row.innerHTML = `
+      <div>
+        <div>${p.name}</div>
+        ${p.archived ? '<span class="status-tag archived">Archived</span>' : ''}
+      </div>
+      <div class="toggle ${p.archived ? '' : 'on'}" data-name="${p.name}" title="${p.archived ? 'Unarchive' : 'Archive'}">
+        <div class="knob"></div>
+      </div>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.toggle').forEach(t => {
+    t.onclick = async () => {
+      const name = t.dataset.name;
+      const nowArchived = t.classList.contains('on'); // currently active -> about to archive
+      t.style.pointerEvents = 'none';
+      try {
+        const roster = await callRpc('setPlayerArchived', currentTeam, name, nowArchived);
+        renderRoster(roster);
+        flashSaved();
+      } catch (err) {
+        showError(err);
+        t.style.pointerEvents = '';
+      }
+    };
+  });
+}
+
+async function addPlayer() {
+  const input = document.getElementById('newPlayerName');
+  const err = document.getElementById('nameErr');
+  const btn = document.getElementById('addPlayerBtn');
+  err.style.display = 'none';
+  const name = input.value.trim();
+  if (!name) return;
+  btn.disabled = true;
+  try {
+    const roster = await callRpc('adminAddPlayer', currentTeam, name);
+    input.value = '';
+    renderRoster(roster);
+    flashSaved();
+  } catch (e) {
+    err.textContent = (e && e.message) ? e.message : String(e);
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+document.getElementById('newPlayerName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addPlayer();
+});
+</script>
+</body>
+</html>
