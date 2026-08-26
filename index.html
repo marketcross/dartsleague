@@ -128,7 +128,7 @@ function renderDivisionTables(divisions) {
   el.innerHTML = divisions.map(d => `
     <div>
       <h3>${escapeHtml(d.name)}</h3>
-      <div class="card table-scroll">${tableHtml(d.table, false)}</div>
+      <div class="card table-scroll">${leagueTableHtml(d.table, false)}</div>
     </div>`).join('');
 }
 
@@ -136,7 +136,7 @@ function renderCupTable(cup) {
   const section = document.getElementById('cupSection');
   if (!cup || !cup.table || !cup.table.length) { section.classList.add('hidden'); return; }
   section.classList.remove('hidden');
-  document.getElementById('cupTableSection').innerHTML = tableHtml(cup.table, true);
+  document.getElementById('cupTableSection').innerHTML = leagueTableHtml(cup.table, true);
 }
 
 function renderNews(news) {
@@ -177,34 +177,6 @@ function renderUpcoming(upcoming) {
       <span class="status-tag ${s.cls}">${s.text}</span>
     </div>`;
   }).join('') + `<p style="margin:12px 0 0;"><a href="fixtures.html">See all fixtures &amp; results →</a></p>`;
-}
-
-// On the Cup table only, the top 4 positions go through to the Knock Out Cup and
-// 5th-8th go into the Subsidiary Cup (see cupKnockoutPairings_ in Code.gs) — flag
-// that on each row with a small chip, plus a divider line between the two groups,
-// same as how a football table shades its European/relegation zones.
-function cupZoneChip(i) {
-  if (i < 4) return '<span class="chip gold">Knock Out Cup</span>';
-  if (i < 8) return '<span class="chip brand">Subsidiary Cup</span>';
-  return '';
-}
-
-function tableHtml(table, isCup) {
-  if (!table.length) return '<p class="empty">No teams set up yet.</p>';
-  return `<table class="data">
-    <thead><tr>
-      <th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th>
-      <th class="num">Pts</th><th class="num">Game +/-</th>
-    </tr></thead>
-    <tbody>
-      ${table.map((t, i) => `
-      <tr class="${i === 0 ? 'leader' : ''}${isCup && i === 3 && table.length > 4 ? ' cup-cutline' : ''}">
-        <td><a href="team.html?name=${teamParam(t.team)}">${escapeHtml(t.team)}</a>${isCup ? cupZoneChip(i) : ''}</td>
-        <td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td>
-        <td class="num">${t.points}</td><td class="num">${t.gameDiff > 0 ? '+' : ''}${t.gameDiff}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>${isCup ? `<p class="page-sub" style="margin:12px 0 0;">Top 4 go through to the Knock Out Cup · 5th–8th go into the Subsidiary Cup.</p>` : ''}`;
 }
 
 // Same fixture-row-style list used for results/upcoming fixtures above, so the two
