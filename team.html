@@ -55,13 +55,15 @@ function render(data) {
   const division = (data.teamDivisions || {})[teamName] || '';
   const divisionEntry = (data.divisions || []).find(d => d.name === division);
   const tableRow = divisionEntry ? divisionEntry.table.find(t => t.team === teamName) : null;
-  const cupRow = data.cup && data.cup.table ? data.cup.table.find(t => t.team === teamName) : null;
+  const cupTable = data.cup && data.cup.table ? data.cup.table : [];
+  const cupPos = cupTable.findIndex(t => t.team === teamName);
+  const cupRow = cupPos !== -1 ? cupTable[cupPos] : null;
 
   let html = `<h2 class="page-title">${escapeHtml(teamName)}</h2>`;
   if (division) html += `<p class="page-sub">${escapeHtml(division)}</p>`;
 
-  function statsTable(title, row) {
-    return `<h2 class="section-title">${escapeHtml(title)}</h2><div class="card">
+  function statsTable(title, row, badge) {
+    return `<h2 class="section-title">${escapeHtml(title)}${badge || ''}</h2><div class="card">
       <table class="data">
         <thead><tr><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th><th class="num">Game +/-</th></tr></thead>
         <tbody><tr>
@@ -73,7 +75,15 @@ function render(data) {
   }
 
   if (tableRow) html += statsTable(division || 'League table', tableRow);
-  if (cupRow) html += statsTable('Cup', cupRow);
+  if (cupRow) {
+    // Same top-4 / 5th-8th zone chip as the homepage cup table, so a team's own
+    // page tells them at a glance which knockout competition they're currently on
+    // course for.
+    const badge = cupPos < 4
+      ? ' <span class="chip gold">Knock Out Cup</span>'
+      : cupPos < 8 ? ' <span class="chip brand">Subsidiary Cup</span>' : '';
+    html += statsTable('Cup', cupRow, badge);
+  }
 
   html += `<h2 class="section-title">Squad</h2><div class="card">`;
   html += roster.length
