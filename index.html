@@ -72,6 +72,10 @@
   </div>
 
   <h2 class="section-title">League table</h2>
+  <div class="filter-row" id="tableFilterRow" style="display:none;">
+    <label for="tableSelect">Show</label>
+    <select id="tableSelect"></select>
+  </div>
   <div class="card table-scroll" id="tableSection"><p class="loading">Loading…</p></div>
 
   <h2 class="section-title">Top 180s this season</h2>
@@ -101,9 +105,33 @@ function render(data) {
   const { results, upcoming } = splitFixtures(data.fixtures);
   renderResults(results.slice(0, 5));
   renderUpcoming(upcoming.slice(0, 5));
-  renderTable(data.leagueTable);
+  setupTableSwitcher(data.divisions, data.cup);
   renderTopStat(document.getElementById('top180sSection'), data.top180s, p => `${p.count}<span class="unit">× 180</span>`);
   renderTopStat(document.getElementById('topFinishesSection'), data.topFinishes, p => `${p.value}`);
+}
+
+// League table now comes back as one table per division plus one for the cup group
+// stage (see computeStandingsGroups_ in Code.gs), so a small dropdown picks which
+// one is showing — same .filter-row/<select> pattern already used on fixtures.html
+// and honours.html, rather than inventing a new tab-button component.
+let TABLE_GROUPS = [];
+function setupTableSwitcher(divisions, cup) {
+  TABLE_GROUPS = divisions.map(d => ({ label: d.name, table: d.table }));
+  if (cup && cup.table && cup.table.length) {
+    TABLE_GROUPS.push({ label: 'Cup', table: cup.table });
+  }
+  const row = document.getElementById('tableFilterRow');
+  const sel = document.getElementById('tableSelect');
+  if (!TABLE_GROUPS.length) { renderTable([]); return; }
+  if (TABLE_GROUPS.length === 1) {
+    row.style.display = 'none';
+    renderTable(TABLE_GROUPS[0].table);
+    return;
+  }
+  row.style.display = '';
+  sel.innerHTML = TABLE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.label)}</option>`).join('');
+  sel.onchange = () => renderTable(TABLE_GROUPS[sel.value].table);
+  renderTable(TABLE_GROUPS[0].table);
 }
 
 function renderNews(news) {
