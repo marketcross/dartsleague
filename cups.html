@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cups — Market Cross Darts League</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="index.html">Market Cross Darts League</a></h1>
+    <div class="tagline">News, fixtures, results &amp; the league table</div>
+    <nav class="site">
+      <a href="index.html">Home</a>
+      <a href="fixtures.html">Fixtures &amp; Results</a>
+      <a href="players.html">Player Stats</a>
+      <a href="teams.html">Teams</a>
+      <a href="cups.html" class="current">Cups</a>
+      <a href="honours.html">Previous Winners</a>
+      <a href="contacts.html">Contacts</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="err-banner" id="errBanner"></div>
+  <h2 class="page-title">Cup Competition</h2>
+  <p class="page-sub">How the cup works, and who each team plays in the group stage.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Group stage</h3>
+    <p>Every team plays 4 of the other teams once each, across 5 match nights — so each team also gets one night off during the group stage. Cup fixtures are played in the same 9-game format as the league.</p>
+    <p style="margin-bottom:0;">All results feed into a single combined table. Position is decided by games won (out of 9 per fixture). If teams are level, ties are broken in this order:</p>
+    <ol style="margin:10px 0 0; padding-left:20px;">
+      <li>Head-to-head result (where the tied teams have played each other)</li>
+      <li>Number of matches won</li>
+      <li>Leg difference (legs won minus legs lost, across every game)</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Knockout rounds</h3>
+    <p>Once the group stage finishes, the top 4 in the cup table go into the <strong>Knock Out Cup</strong>, and 5th–8th go into the <strong>Subsidiary Cup</strong>. Semi-final draws are fixed by league position rather than a random draw:</p>
+    <p style="margin:0 0 4px;"><span class="chip gold">Knock Out Cup</span> 1st v 4th, 2nd v 3rd</p>
+    <p style="margin:0;"><span class="chip brand">Subsidiary Cup</span> 5th v 8th, 6th v 7th</p>
+    <p>In each tie the higher-placed team plays at home. Knockout matches are a single game — there's no second leg.</p>
+    <p style="margin-bottom:0;">See the live <a href="index.html">cup table on the home page</a> to check current position and knockout zones.</p>
+  </div>
+
+  <h2 class="section-title">Your cup fixtures</h2>
+  <p class="page-sub" style="margin-top:-8px;">Every team's 4 group-stage opponents, in order played — (H) home, (A) away.</p>
+  <div class="card table-scroll" id="cupOpponentsSection"><p class="loading">Loading…</p></div>
+</div>
+
+<footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
+
+<script src="assets/data.js"></script>
+<script>
+loadLeagueData().then(data => {
+  renderOpponents(data.fixtures || []);
+}).catch(showPageError);
+
+function renderOpponents(fixtures) {
+  const el = document.getElementById('cupOpponentsSection');
+  const cupFixtures = fixtures
+    .filter(f => f.competition === 'Cup')
+    .slice()
+    .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+
+  if (!cupFixtures.length) {
+    el.innerHTML = '<p class="empty">Cup fixtures haven\'t been set up yet — check back once they\'re added.</p>';
+    return;
+  }
+
+  // Each team's opponents, in the order their cup fixtures are actually played —
+  // built straight from the Fixtures data rather than hard-coded, so this always
+  // matches whatever's really in the sheet.
+  const byTeam = {};
+  cupFixtures.forEach(f => {
+    if (!byTeam[f.homeTeam]) byTeam[f.homeTeam] = [];
+    if (!byTeam[f.awayTeam]) byTeam[f.awayTeam] = [];
+    byTeam[f.homeTeam].push({ opponent: f.awayTeam, venue: 'H' });
+    byTeam[f.awayTeam].push({ opponent: f.homeTeam, venue: 'A' });
+  });
+
+  const teams = Object.keys(byTeam).sort((a, b) => a.localeCompare(b));
+  const maxOpponents = Math.max(...teams.map(t => byTeam[t].length));
+
+  el.innerHTML = `<table class="data">
+    <thead><tr>
+      <th>Team</th>
+      ${Array.from({ length: maxOpponents }, (_, i) => `<th>Opponent ${i + 1}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${teams.map(t => `
+      <tr>
+        <td><a href="team.html?name=${teamParam(t)}"><strong>${escapeHtml(t)}</strong></a></td>
+        ${byTeam[t].map(o => `
+        <td><a href="team.html?name=${teamParam(o.opponent)}">${escapeHtml(o.opponent)}</a> <span class="ha ${o.venue === 'H' ? 'home' : 'away'}">${o.venue}</span></td>`).join('')}
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+</script>
+</body>
+</html>
