@@ -43,6 +43,12 @@ h2.section-title:first-child{margin-top:0;}
 .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
 .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
 @media (max-width:700px){ .grid-2, .grid-3{grid-template-columns:1fr;} }
+/* League tables: side by side when there's room (2 divisions fit neatly at the
+   site's max width), stacking automatically on narrow screens — auto-fit rather
+   than a fixed 2-column grid so a 3rd division one day doesn't need a CSS change. */
+.grid-tables{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-bottom:16px;}
+.grid-tables h3{font-size:15px; margin:0 0 10px;}
+.hidden{display:none;}
 
 /* ---------- loading / empty states ---------- */
 .loading, .empty{color:var(--sub); font-size:13.5px; padding:10px 0;}
@@ -57,6 +63,7 @@ table.data td.num, table.data th.num{text-align:right;}
 .table-scroll{overflow-x:auto;}
 tr.leader td{font-weight:700;}
 tr.leader td:first-child{color:var(--brand);}
+tr.cup-cutline td{border-bottom:2px solid var(--line);}
 
 /* ---------- news ---------- */
 .news-item{border-bottom:1px dashed var(--line); padding:12px 0;}
