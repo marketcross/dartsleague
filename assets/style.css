@@ -99,6 +99,11 @@ tr.cup-cutline td{border-bottom:2px solid var(--line);}
 .chip.gold{background:var(--gold-bg); color:var(--gold);}
 .chip.brand{background:#fbf1f1; color:var(--brand);}
 
+/* Home/away badge next to an opponent's name (cups.html) */
+.ha{display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; margin-left:2px;}
+.ha.home{background:var(--ok-bg); color:var(--ok);}
+.ha.away{background:#eef0f3; color:var(--sub);}
+
 /* ---------- buttons ---------- */
 .btn{font-family:inherit; font-size:14px; font-weight:600; border-radius:10px; border:none; cursor:pointer; padding:10px 16px; display:inline-block;}
 .btn-primary{background:var(--brand); color:#fff;}
