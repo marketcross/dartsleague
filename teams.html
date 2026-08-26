@@ -27,7 +27,7 @@
   <div class="err-banner" id="errBanner"></div>
   <h2 class="page-title">Teams</h2>
   <p class="page-sub">Pick a team to see their squad, fixtures and results.</p>
-  <div class="card" id="teamList"><p class="loading">Loading…</p></div>
+  <div id="teamList"><p class="loading card">Loading…</p></div>
 </div>
 
 <footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
@@ -37,11 +37,37 @@
 loadLeagueData().then(data => {
   const el = document.getElementById('teamList');
   if (!data.teams.length) { el.innerHTML = '<p class="empty">No teams set up yet.</p>'; return; }
-  el.innerHTML = data.teams.map(t => `
+
+  function teamRow(t) {
+    return `
     <a class="fixture-row" style="text-decoration:none; color:inherit;" href="team.html?name=${teamParam(t)}">
       <div class="teams">${escapeHtml(t)}</div>
       <span>→</span>
-    </a>`).join('');
+    </a>`;
+  }
+
+  // Group by Division (data.teamDivisions) so a 2-division setup reads as two
+  // separate lists rather than one flat A-Z list. A team with no division set yet
+  // (teamDivisions[t] === '') falls into its own "Teams" group rather than being
+  // hidden, so it's obvious from the site that it still needs a division assigned.
+  const divisions = data.teamDivisions || {};
+  const groups = {};
+  const order = [];
+  data.teams.forEach(t => {
+    const name = divisions[t] || '';
+    if (!groups[name]) { groups[name] = []; order.push(name); }
+    groups[name].push(t);
+  });
+
+  if (order.length <= 1) {
+    el.innerHTML = `<div class="card">${data.teams.map(teamRow).join('')}</div>`;
+    return;
+  }
+
+  el.innerHTML = order.map(name => `
+    <h2 class="section-title" style="margin-top:${order.indexOf(name) === 0 ? '0' : '24px'};">${escapeHtml(name || 'Teams')}</h2>
+    <div class="card">${groups[name].map(teamRow).join('')}</div>
+  `).join('');
 }).catch(showPageError);
 </script>
 </body>
