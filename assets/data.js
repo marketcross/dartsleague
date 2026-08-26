@@ -6,7 +6,7 @@ const SITE_CONFIG = {
   // Paste your Apps Script web app URL here (Deploy > Manage deployments > Web app URL),
   // keeping "?page=api" on the end exactly as shown. Example:
   // 'https://script.google.com/macros/s/AKfycbXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec?page=api'
-  API_URL: 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api',
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE?page=api',
 };
 
 let _dataPromise = null;
@@ -110,4 +110,37 @@ function scoreForTeam(game, teamName) {
   if (!game.score || !game.winnerTeam) return '—';
   const [winLegs, loseLegs] = game.score.split('-');
   return game.winnerTeam === teamName ? `${winLegs}–${loseLegs}` : `${loseLegs}–${winLegs}`;
+}
+
+// ---------- League / cup table rendering ----------
+// Shared by index.html (division tables + the home page cup table) and cups.html
+// (the cup table repeated at the bottom of the rules page), so both stay in sync
+// automatically rather than drifting apart as two separate copies.
+
+// On a cup table only, the top 4 positions go through to the Knock Out Cup and
+// 5th-8th go into the Subsidiary Cup (see cupKnockoutPairings_ in Code.gs) — flag
+// that on each row with a small chip, same as how a football table shades its
+// European/relegation zones.
+function cupZoneChip(i) {
+  if (i < 4) return '<span class="chip gold">Knock Out Cup</span>';
+  if (i < 8) return '<span class="chip brand">Subsidiary Cup</span>';
+  return '';
+}
+
+function leagueTableHtml(table, isCup) {
+  if (!table.length) return '<p class="empty">No teams set up yet.</p>';
+  return `<table class="data">
+    <thead><tr>
+      <th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th>
+      <th class="num">Pts</th><th class="num">Game +/-</th>
+    </tr></thead>
+    <tbody>
+      ${table.map((t, i) => `
+      <tr class="${i === 0 ? 'leader' : ''}${isCup && i === 3 && table.length > 4 ? ' cup-cutline' : ''}">
+        <td><a href="team.html?name=${teamParam(t.team)}">${escapeHtml(t.team)}</a>${isCup ? cupZoneChip(i) : ''}</td>
+        <td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td>
+        <td class="num">${t.points}</td><td class="num">${t.gameDiff > 0 ? '+' : ''}${t.gameDiff}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>${isCup ? `<p class="page-sub" style="margin:12px 0 0;">Top 4 go through to the Knock Out Cup · 5th–8th go into the Subsidiary Cup.</p>` : ''}`;
 }
