@@ -48,7 +48,7 @@ function render(f) {
   const s = statusLabel(f.status);
   let html = `
     <h2 class="page-title">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</h2>
-    <p class="page-sub">${escapeHtml(f.date)} · <span class="status-tag ${s.cls}">${s.text}</span></p>`;
+    <p class="page-sub">${f.competition ? escapeHtml(f.competition) + ' · ' : ''}${escapeHtml(f.date)} · <span class="status-tag ${s.cls}">${s.text}</span></p>`;
 
   if (f.status !== 'Submitted') {
     html += `<div class="card"><p class="empty">No result yet — check back after the fixture is played.</p></div>`;
