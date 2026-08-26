@@ -71,18 +71,24 @@
     </div>
   </div>
 
-  <h2 class="section-title">League table</h2>
-  <div class="filter-row" id="tableFilterRow" style="display:none;">
-    <label for="tableSelect">Show</label>
-    <select id="tableSelect"></select>
+  <h2 class="section-title">League tables</h2>
+  <div class="grid-tables" id="divisionTablesSection"><p class="loading">Loading…</p></div>
+
+  <div id="cupSection" class="hidden">
+    <h2 class="section-title">Cup table</h2>
+    <div class="card table-scroll" id="cupTableSection"></div>
   </div>
-  <div class="card table-scroll" id="tableSection"><p class="loading">Loading…</p></div>
 
-  <h2 class="section-title">Top 180s this season</h2>
-  <div class="grid-3" id="top180sSection"><p class="loading">Loading…</p></div>
-
-  <h2 class="section-title">Top finishes this season</h2>
-  <div class="grid-3" id="topFinishesSection"><p class="loading">Loading…</p></div>
+  <div class="grid-2">
+    <div>
+      <h2 class="section-title">Top 180s this season</h2>
+      <div class="card" id="top180sSection"><p class="loading">Loading…</p></div>
+    </div>
+    <div>
+      <h2 class="section-title">Top finishes this season</h2>
+      <div class="card" id="topFinishesSection"><p class="loading">Loading…</p></div>
+    </div>
+  </div>
 </div>
 
 <footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
@@ -105,33 +111,31 @@ function render(data) {
   const { results, upcoming } = splitFixtures(data.fixtures);
   renderResults(results.slice(0, 5));
   renderUpcoming(upcoming.slice(0, 5));
-  setupTableSwitcher(data.divisions, data.cup);
+  renderDivisionTables(data.divisions || []);
+  renderCupTable(data.cup);
   renderTopStat(document.getElementById('top180sSection'), data.top180s, p => `${p.count}<span class="unit">× 180</span>`);
   renderTopStat(document.getElementById('topFinishesSection'), data.topFinishes, p => `${p.value}`);
 }
 
 // League table now comes back as one table per division plus one for the cup group
-// stage (see computeStandingsGroups_ in Code.gs), so a small dropdown picks which
-// one is showing — same .filter-row/<select> pattern already used on fixtures.html
-// and honours.html, rather than inventing a new tab-button component.
-let TABLE_GROUPS = [];
-function setupTableSwitcher(divisions, cup) {
-  TABLE_GROUPS = divisions.map(d => ({ label: d.name, table: d.table }));
-  if (cup && cup.table && cup.table.length) {
-    TABLE_GROUPS.push({ label: 'Cup', table: cup.table });
-  }
-  const row = document.getElementById('tableFilterRow');
-  const sel = document.getElementById('tableSelect');
-  if (!TABLE_GROUPS.length) { renderTable([]); return; }
-  if (TABLE_GROUPS.length === 1) {
-    row.style.display = 'none';
-    renderTable(TABLE_GROUPS[0].table);
-    return;
-  }
-  row.style.display = '';
-  sel.innerHTML = TABLE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.label)}</option>`).join('');
-  sel.onchange = () => renderTable(TABLE_GROUPS[sel.value].table);
-  renderTable(TABLE_GROUPS[0].table);
+// stage (see computeStandingsGroups_ in Code.gs). Rather than a dropdown to switch
+// between them, the divisions sit side by side (auto-fit grid — stacks on narrow
+// screens) with the cup table shown underneath, so all of it's visible at once.
+function renderDivisionTables(divisions) {
+  const el = document.getElementById('divisionTablesSection');
+  if (!divisions.length) { el.innerHTML = '<p class="empty">No teams set up yet.</p>'; return; }
+  el.innerHTML = divisions.map(d => `
+    <div>
+      <h3>${escapeHtml(d.name)}</h3>
+      <div class="card table-scroll">${tableHtml(d.table, false)}</div>
+    </div>`).join('');
+}
+
+function renderCupTable(cup) {
+  const section = document.getElementById('cupSection');
+  if (!cup || !cup.table || !cup.table.length) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  document.getElementById('cupTableSection').innerHTML = tableHtml(cup.table, true);
 }
 
 function renderNews(news) {
@@ -174,33 +178,47 @@ function renderUpcoming(upcoming) {
   }).join('') + `<p style="margin:12px 0 0;"><a href="fixtures.html">See all fixtures &amp; results →</a></p>`;
 }
 
-function renderTable(table) {
-  const el = document.getElementById('tableSection');
-  if (!table.length) { el.innerHTML = '<p class="empty">No teams set up yet.</p>'; return; }
-  el.innerHTML = `<table class="data">
+// On the Cup table only, the top 4 positions go through to the Knock Out Cup and
+// 5th-8th go into the Subsidiary Cup (see cupKnockoutPairings_ in Code.gs) — flag
+// that on each row with a small chip, plus a divider line between the two groups,
+// same as how a football table shades its European/relegation zones.
+function cupZoneChip(i) {
+  if (i < 4) return '<span class="chip gold">Knock Out Cup</span>';
+  if (i < 8) return '<span class="chip brand">Subsidiary Cup</span>';
+  return '';
+}
+
+function tableHtml(table, isCup) {
+  if (!table.length) return '<p class="empty">No teams set up yet.</p>';
+  return `<table class="data">
     <thead><tr>
       <th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th>
       <th class="num">Pts</th><th class="num">Game +/-</th>
     </tr></thead>
     <tbody>
       ${table.map((t, i) => `
-      <tr class="${i === 0 ? 'leader' : ''}">
-        <td><a href="team.html?name=${teamParam(t.team)}">${escapeHtml(t.team)}</a></td>
+      <tr class="${i === 0 ? 'leader' : ''}${isCup && i === 3 && table.length > 4 ? ' cup-cutline' : ''}">
+        <td><a href="team.html?name=${teamParam(t.team)}">${escapeHtml(t.team)}</a>${isCup ? cupZoneChip(i) : ''}</td>
         <td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td>
         <td class="num">${t.points}</td><td class="num">${t.gameDiff > 0 ? '+' : ''}${t.gameDiff}</td>
       </tr>`).join('')}
     </tbody>
-  </table>`;
+  </table>${isCup ? `<p class="page-sub" style="margin:12px 0 0;">Top 4 go through to the Knock Out Cup · 5th–8th go into the Subsidiary Cup.</p>` : ''}`;
 }
 
+// Same fixture-row-style list used for results/upcoming fixtures above, so the two
+// stat lists sit side by side (via the surrounding .grid-2) and read consistently
+// with the rest of the page, rather than as separate grids of tiles stacked on
+// top of each other.
 function renderTopStat(el, list, valueHtml) {
   if (!list.length) { el.innerHTML = '<p class="empty">None logged yet.</p>'; return; }
   el.innerHTML = list.map((p, i) => `
-    <div class="stat-tile">
-      <div class="rank">#${i + 1}</div>
-      <div class="name">${escapeHtml(p.name)}</div>
-      <div class="team">${escapeHtml(p.team)}</div>
-      <div class="value">${valueHtml(p)}</div>
+    <div class="fixture-row">
+      <div>
+        <div class="teams">#${i + 1} ${escapeHtml(p.name)}</div>
+        <div class="date">${escapeHtml(p.team)}</div>
+      </div>
+      <span class="result">${valueHtml(p)}</span>
     </div>`).join('');
 }
 </script>
