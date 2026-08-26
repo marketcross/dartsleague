@@ -11,6 +11,7 @@
 <div class="err-banner" id="errBanner"></div>
 <div class="toolbar">
   <a href="../index.html">← Back to site</a>
+  <select id="tableSelect" style="display:none; padding:9px 10px; border:1px solid var(--line); border-radius:10px; font-size:14px; background:#fff;"></select>
   <button class="btn" id="downloadBtn" disabled>Download image</button>
 </div>
 
@@ -26,24 +27,46 @@
 <script src="../assets/data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+// The site now has one table per division plus a cup group-stage table (see
+// computeStandingsGroups_ in Code.gs) instead of one flat league table, so this
+// card generator needs to know which one to render — a small dropdown next to the
+// download button picks it, defaulting to the first division.
+let TABLE_GROUPS = [];
+
 loadLeagueData().then(data => {
   document.getElementById('cardSub').textContent = 'As of ' + formatToday(data.today);
 
-  const body = document.getElementById('cardBody');
-  if (!data.leagueTable.length) {
-    body.innerHTML = '<p class="empty">No teams set up yet.</p>';
-  } else {
-    body.innerHTML = `<table class="tcard">
-      <thead><tr><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th></tr></thead>
-      <tbody>
-        ${data.leagueTable.map(t => `
-        <tr><td>${escapeHtml(t.team)}</td><td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td><td class="num">${t.points}</td></tr>`).join('')}
-      </tbody>
-    </table>`;
+  TABLE_GROUPS = (data.divisions || []).map(d => ({ label: d.name, table: d.table }));
+  if (data.cup && data.cup.table && data.cup.table.length) {
+    TABLE_GROUPS.push({ label: 'Cup', table: data.cup.table });
   }
 
+  const sel = document.getElementById('tableSelect');
+  if (TABLE_GROUPS.length > 1) {
+    sel.style.display = '';
+    sel.innerHTML = TABLE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.label)}</option>`).join('');
+    sel.addEventListener('change', () => renderTable(TABLE_GROUPS[sel.value]));
+  }
+
+  renderTable(TABLE_GROUPS[0] || { label: 'League Table', table: [] });
   document.getElementById('downloadBtn').disabled = false;
 }).catch(showPageError);
+
+function renderTable(group) {
+  document.querySelector('#captureCard h2').textContent = group.label ? group.label + ' Table' : 'League Table';
+  const body = document.getElementById('cardBody');
+  if (!group.table.length) {
+    body.innerHTML = '<p class="empty">No teams set up yet.</p>';
+    return;
+  }
+  body.innerHTML = `<table class="tcard">
+    <thead><tr><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th></tr></thead>
+    <tbody>
+      ${group.table.map(t => `
+      <tr><td>${escapeHtml(t.team)}</td><td class="num">${t.played}</td><td class="num">${t.won}</td><td class="num">${t.lost}</td><td class="num">${t.points}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+}
 
 function formatToday(iso) {
   const d = new Date(iso + 'T00:00:00');
