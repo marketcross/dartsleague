@@ -47,21 +47,33 @@ function render(data) {
   const roster = (data.rosters[teamName] || []);
   const teamFixtures = data.fixtures.filter(f => f.homeTeam === teamName || f.awayTeam === teamName);
   const { results, upcoming } = splitFixtures(teamFixtures);
-  const tableRow = data.leagueTable.find(t => t.team === teamName);
+
+  // League table now comes split by division (data.divisions), so find the team's
+  // own division first, then its row within that division's table. A team can also
+  // show up in the separate cup group-stage table (data.cup), so show that as its
+  // own small table underneath when it applies, rather than picking just one.
+  const division = (data.teamDivisions || {})[teamName] || '';
+  const divisionEntry = (data.divisions || []).find(d => d.name === division);
+  const tableRow = divisionEntry ? divisionEntry.table.find(t => t.team === teamName) : null;
+  const cupRow = data.cup && data.cup.table ? data.cup.table.find(t => t.team === teamName) : null;
 
   let html = `<h2 class="page-title">${escapeHtml(teamName)}</h2>`;
+  if (division) html += `<p class="page-sub">${escapeHtml(division)}</p>`;
 
-  if (tableRow) {
-    html += `<div class="card">
+  function statsTable(title, row) {
+    return `<h2 class="section-title">${escapeHtml(title)}</h2><div class="card">
       <table class="data">
         <thead><tr><th class="num">P</th><th class="num">W</th><th class="num">L</th><th class="num">Pts</th><th class="num">Game +/-</th></tr></thead>
         <tbody><tr>
-          <td class="num">${tableRow.played}</td><td class="num">${tableRow.won}</td><td class="num">${tableRow.lost}</td>
-          <td class="num">${tableRow.points}</td><td class="num">${tableRow.gameDiff > 0 ? '+' : ''}${tableRow.gameDiff}</td>
+          <td class="num">${row.played}</td><td class="num">${row.won}</td><td class="num">${row.lost}</td>
+          <td class="num">${row.points}</td><td class="num">${row.gameDiff > 0 ? '+' : ''}${row.gameDiff}</td>
         </tr></tbody>
       </table>
     </div>`;
   }
+
+  if (tableRow) html += statsTable(division || 'League table', tableRow);
+  if (cupRow) html += statsTable('Cup', cupRow);
 
   html += `<h2 class="section-title">Squad</h2><div class="card">`;
   html += roster.length
@@ -95,7 +107,7 @@ function rowHtml(f) {
   return `
     <a class="fixture-row" style="text-decoration:none; color:inherit;" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">
       <div>
-        <div class="teams">${venue} v ${escapeHtml(opponent)}</div>
+        <div class="teams">${venue} v ${escapeHtml(opponent)} ${f.competition ? `<span class="chip brand">${escapeHtml(f.competition)}</span>` : ''}</div>
         <div class="date">${escapeHtml(f.date)}</div>
       </div>
       ${right}
