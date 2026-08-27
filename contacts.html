@@ -28,19 +28,27 @@
 <div class="wrap">
   <div class="err-banner" id="errBanner"></div>
   <h2 class="page-title">Contacts</h2>
-  <p class="page-sub">The league committee — get in touch about fixtures, results or anything else.</p>
+  <p class="page-sub">Get in touch about fixtures, results or anything else.</p>
+
+  <h2 class="section-title" style="margin-top:0;">Committee</h2>
   <div class="card" id="committeeSection"><p class="loading">Loading…</p></div>
+
+  <h2 class="section-title">Team Contacts</h2>
+  <p class="page-sub" style="margin-top:-8px;">Each team's captain and home venue.</p>
+  <div class="card table-scroll" id="teamContactsSection"><p class="loading">Loading…</p></div>
 </div>
 
 <footer class="site">Market Cross Darts League — data updates automatically from the league's results sheet.</footer>
 
 <script src="assets/data.js"></script>
 <script>
-loadLeagueData().then(render).catch(showPageError);
+loadLeagueData().then(data => {
+  renderCommittee(data.committee || []);
+  renderTeamContacts(data.teamContacts || []);
+}).catch(showPageError);
 
-function render(data) {
+function renderCommittee(committee) {
   const el = document.getElementById('committeeSection');
-  const committee = data.committee || [];
   if (!committee.length) {
     el.innerHTML = '<p class="empty">No committee contacts added yet.</p>';
     return;
@@ -56,6 +64,25 @@ function render(data) {
         ${c.phone ? `<div>${escapeHtml(c.phone)}</div>` : ''}
       </div>
     </div>`).join('');
+}
+
+function renderTeamContacts(teamContacts) {
+  const el = document.getElementById('teamContactsSection');
+  if (!teamContacts.length) {
+    el.innerHTML = '<p class="empty">No team contacts added yet.</p>';
+    return;
+  }
+  el.innerHTML = `<table class="data">
+    <thead><tr><th>Team</th><th>Captain</th><th>Venue Address</th></tr></thead>
+    <tbody>
+      ${teamContacts.map(t => `
+      <tr>
+        <td><a href="team.html?name=${teamParam(t.team)}"><strong>${escapeHtml(t.team)}</strong></a></td>
+        <td>${t.captain ? escapeHtml(t.captain) : '—'}</td>
+        <td>${t.venueAddress ? escapeHtml(t.venueAddress) : '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
 }
 </script>
 </body>
