@@ -111,12 +111,51 @@ loadLeagueData().then(render).catch(showPageError);
 function render(data) {
   renderNews(data.news);
   const { results, upcoming } = splitFixtures(data.fixtures);
-  renderResults(results.slice(0, 5));
-  renderUpcoming(upcoming.slice(0, 5));
+  renderResults(latestResults(results));
+  renderUpcoming(upcomingInWindow(upcoming, data.today));
   renderDivisionTables(data.divisions || []);
   renderCupTable(data.cup);
   renderTopStat(document.getElementById('top180sSection'), data.top180s, p => `${p.count}<span class="unit">× 180</span>`);
   renderTopStat(document.getElementById('topFinishesSection'), data.topFinishes, p => `${p.value}`);
+}
+
+// "Latest results" means the most recently completed match night, however many
+// fixtures that was — not just "the last 5 results", which could mix in older
+// fixtures from a previous night once this one's only partly submitted.
+// `results` is already sorted newest-first (see splitFixtures), so its first
+// date is the max.
+function latestResults(results) {
+  if (!results.length) return [];
+  const maxDate = results[0].dateISO;
+  return results.filter(f => f.dateISO === maxDate);
+}
+
+// "Next fixtures" is a rolling window starting tomorrow (today itself is
+// excluded) — normally the next 7 days, or 8 days from 2031 onwards. Every
+// fixture that falls in the window is shown, not a fixed top-N.
+//
+// If that window happens to be empty (a mid-season gap, the close season,
+// etc.) rather than show nothing, fall back to the next batch of fixtures
+// beyond it — every fixture on the soonest date that has any, the same
+// "group by date" idea as latestResults() above but looking forwards.
+function upcomingInWindow(upcoming, todayISO) {
+  if (!todayISO) return upcoming; // defensive: don't hide everything if "today" is ever missing
+  const windowDays = Number(todayISO.slice(0, 4)) > 2030 ? 8 : 7;
+  const start = addDaysISO(todayISO, 1);
+  const end = addDaysISO(todayISO, windowDays);
+  const inWindow = upcoming.filter(f => f.dateISO >= start && f.dateISO <= end);
+  if (inWindow.length) return inWindow;
+
+  const future = upcoming.filter(f => f.dateISO >= start); // upcoming is already sorted soonest-first
+  if (!future.length) return [];
+  const nextDate = future[0].dateISO;
+  return future.filter(f => f.dateISO === nextDate);
+}
+
+function addDaysISO(iso, days) {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
 // League table now comes back as one table per division plus one for the cup group
@@ -157,7 +196,7 @@ function renderResults(results) {
   el.innerHTML = results.map(f => `
     <div class="fixture-row">
       <div>
-        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</div>
+        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)} ${f.competition ? `<span class="chip brand">${escapeHtml(f.competition)}</span>` : ''}</div>
         <div class="date">${escapeHtml(f.date)}</div>
       </div>
       <a class="result" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">${f.homePoints}–${f.awayPoints}</a>
@@ -172,7 +211,7 @@ function renderUpcoming(upcoming) {
     return `
     <div class="fixture-row">
       <div>
-        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</div>
+        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)} ${f.competition ? `<span class="chip brand">${escapeHtml(f.competition)}</span>` : ''}</div>
         <div class="date">${escapeHtml(f.date)}</div>
       </div>
       <span class="status-tag ${s.cls}">${s.text}</span>
