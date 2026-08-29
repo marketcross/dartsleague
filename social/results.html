@@ -21,6 +21,7 @@
     <div class="sub" id="cardSub">Loading…</div>
   </div>
   <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
+  <div class="card-highlights hidden" id="cardHighlights"></div>
 </div>
 
 <script src="../assets/data.js"></script>
@@ -50,6 +51,15 @@ loadLeagueData().then(data => {
         <div class="score">${f.homePoints}–${f.awayPoints}</div>
       </div>`).join('')
     : '<p class="empty">No results to show.</p>';
+
+  const highlightsEl = document.getElementById('cardHighlights');
+  const highlightsMarkup = highlightsHtml(weeklyHighlights(results));
+  if (highlightsMarkup) {
+    highlightsEl.innerHTML = '<div class="highlights-label">180s &amp; Finishes</div>' + highlightsMarkup;
+    highlightsEl.classList.remove('hidden');
+  } else {
+    highlightsEl.classList.add('hidden');
+  }
 
   document.getElementById('downloadBtn').disabled = false;
 }).catch(showPageError);
