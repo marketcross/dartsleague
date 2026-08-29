@@ -106,6 +106,18 @@ tr.cup-cutline td{border-bottom:2px solid var(--line);}
 .chip.gold{background:var(--gold-bg); color:var(--gold);}
 .chip.brand{background:#fbf1f1; color:var(--brand);}
 
+/* ---------- weekly 180s/finishes round-up (index.html) ---------- */
+/* Deliberately lighter/more compact than the season leaderboard tiles — a wrapping
+   row of small chips rather than a full list. */
+.highlight-list{display:flex; flex-wrap:wrap; gap:8px;}
+.highlight-row{
+  display:flex; align-items:center; gap:6px; padding:6px 10px;
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-size:12.5px;
+}
+.highlight-name{font-weight:700;}
+.highlight-team{color:var(--sub);}
+.highlight-row .chip{margin:0;}
+
 /* Home/away badge next to an opponent's name (cups.html) */
 .ha{display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; margin-left:2px;}
 .ha.home{background:var(--ok-bg); color:var(--ok);}
