@@ -25,6 +25,11 @@
     'team.html': 'teams.html',
   };
 
+  var FACEBOOK_URL = 'https://www.facebook.com/marketcrossinvitationdartleague';
+  var FACEBOOK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M13.5 21v-7.5h2.5l.4-3H13.5V8.5c0-.87.24-1.46 1.49-1.46H16.5V4.35' +
+    'C16.18 4.31 15.09 4.2 13.82 4.2c-2.65 0-4.46 1.62-4.46 4.6V10.5H7v3h2.36V21h4.14z"/></svg>';
+
   function currentFile() {
     var path = location.pathname.split('/').pop();
     return path || 'index.html'; // "/" or "" (root URL with no filename) is the home page
@@ -42,16 +47,18 @@
       var cls = href === here ? ' class="current"' : '';
       return '<a href="' + href + '"' + cls + '>' + label + '</a>';
     }).join('\n      ');
+    var facebookLink = '<a href="' + FACEBOOK_URL + '" target="_blank" rel="noopener" ' +
+      'class="icon-link" aria-label="Market Cross Darts League on Facebook">' + FACEBOOK_ICON_SVG + '</a>';
     return '' +
       '<div class="inner">' +
       '<div class="brand-row">' +
       '<img src="assets/logo.png" alt="" class="site-logo" width="35" height="48">' +
       '<div>' +
       '<h1><a href="index.html">Market Cross Darts League</a></h1>' +
-      '<div class="tagline">News, fixtures, results &amp; the league table</div>' +
+      '<div class="tagline">News, fixtures, results, league tables and stats</div>' +
       '</div>' +
       '</div>' +
-      '<nav class="site">\n      ' + navHtml + '\n    </nav>' +
+      '<nav class="site">\n      ' + navHtml + '\n      ' + facebookLink + '\n    </nav>' +
       '</div>';
   }
 

@@ -33,6 +33,11 @@ nav.site a{
 }
 nav.site a:hover{background:rgba(255,255,255,.22); text-decoration:none;}
 nav.site a.current{background:#fff; color:var(--brand);}
+nav.site a.icon-link{
+  margin-left:auto; padding:7px 9px; display:inline-flex; align-items:center; justify-content:center;
+}
+nav.site a.icon-link svg{width:16px; height:16px; display:block;}
+nav.site a.icon-link:hover{background:#1877F2; color:#fff;}
 
 main{display:block;}
 h2.section-title{font-size:17px; margin:32px 0 12px;}
