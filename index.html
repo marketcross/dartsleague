@@ -45,8 +45,10 @@
     </a>
   </div>
 
-  <h2 class="section-title">Latest news</h2>
-  <div id="newsSection" class="card"><p class="loading">Loading…</p></div>
+  <div id="newsWrap">
+    <h2 class="section-title">Latest news</h2>
+    <div id="newsSection" class="card"><p class="loading">Loading…</p></div>
+  </div>
 
   <div class="grid-2">
     <div>
@@ -171,8 +173,10 @@ function renderCupTable(cup) {
 }
 
 function renderNews(news) {
+  const wrap = document.getElementById('newsWrap');
+  if (!news.length) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
   const el = document.getElementById('newsSection');
-  if (!news.length) { el.innerHTML = '<p class="empty">No news posted yet.</p>'; return; }
   el.innerHTML = news.slice(0, 5).map(n => `
     <div class="news-item">
       <div class="date">${escapeHtml(n.date)}</div>
