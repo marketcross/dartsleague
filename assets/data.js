@@ -6,7 +6,7 @@ const SITE_CONFIG = {
   // Paste your Apps Script web app URL here (Deploy > Manage deployments > Web app URL),
   // keeping "?page=api" on the end exactly as shown. Example:
   // 'https://script.google.com/macros/s/AKfycbXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec?page=api'
-  API_URL: 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api',
+  API_URL: 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE?page=api',
 };
 
 let _dataPromise = null;
@@ -125,6 +125,64 @@ function cupZoneChip(i) {
   if (i < 4) return '<span class="chip gold">Knock Out Cup</span>';
   if (i < 8) return '<span class="chip brand">Subsidiary Cup</span>';
   return '';
+}
+
+// ---------- 180s / finishes round-up ----------
+// Shared by index.html (the homepage "weekly round-up") and social/results.html
+// (the Facebook results card), so both stay in sync rather than drifting apart
+// as two separate copies.
+
+// Pulls every 180 and finish out of a set of fixtures, consolidated one line per
+// player. Knock Out Cup / Subsidiary Cup fixtures are excluded — 180s and finishes
+// only count towards these season-facing stats from league and cup group-stage
+// matches (see rule 10.2 on the Rules page); a 180 thrown in a knockout still
+// shows on that fixture's own page, just not in either round-up.
+function weeklyHighlights(fixtures) {
+  const byPlayer = {};
+  fixtures.forEach(f => {
+    if (f.competition === 'Knock Out Cup' || f.competition === 'Subsidiary Cup') return;
+    // The Stats list only has a bare player name, not a team — work out which side
+    // fielded them in this fixture from the Games breakdown, same approach as the
+    // season leaderboard on the backend.
+    const teamByName = {};
+    (f.games || []).forEach(g => {
+      [g.homePlayer1, g.homePlayer2].forEach(n => { if (n) teamByName[n] = f.homeTeam; });
+      [g.awayPlayer1, g.awayPlayer2].forEach(n => { if (n) teamByName[n] = f.awayTeam; });
+    });
+    (f.stats || []).forEach(s => {
+      if (!s.name) return;
+      const team = teamByName[s.name] || '';
+      const key = team + '||' + s.name;
+      if (!byPlayer[key]) byPlayer[key] = { name: s.name, team, oneEighties: 0, bestFinish: null };
+      if (s.type === '180') byPlayer[key].oneEighties++;
+      else if (s.type === 'finish' && s.value) {
+        const v = Number(s.value);
+        if (byPlayer[key].bestFinish === null || v > byPlayer[key].bestFinish) byPlayer[key].bestFinish = v;
+      }
+    });
+  });
+  return Object.values(byPlayer)
+    .filter(p => p.oneEighties > 0 || p.bestFinish)
+    .sort((a, b) => b.oneEighties - a.oneEighties || (b.bestFinish || 0) - (a.bestFinish || 0) || a.name.localeCompare(b.name));
+}
+
+// Shared markup for a weeklyHighlights() list — used on both the homepage round-up
+// and the Facebook results card, which each supply their own CSS for
+// .highlight-list / .highlight-row / .chip.gold to fit their own look. Returns ''
+// when there's nothing to show, so callers can hide their wrapper entirely.
+function highlightsHtml(list) {
+  if (!list.length) return '';
+  return '<div class="highlight-list">' + list.map(p => {
+    const badges = [];
+    if (p.oneEighties) badges.push(`<span class="chip gold">${p.oneEighties > 1 ? p.oneEighties + '&times; ' : ''}180</span>`);
+    if (p.bestFinish) badges.push(`<span class="chip gold">${p.bestFinish} checkout</span>`);
+    return `
+    <div class="highlight-row">
+      <span class="highlight-name">${escapeHtml(p.name)}</span>
+      ${p.team ? `<span class="highlight-team">${escapeHtml(p.team)}</span>` : ''}
+      ${badges.join('')}
+    </div>`;
+  }).join('') + '</div>';
 }
 
 function leagueTableHtml(table, isCup) {

@@ -131,8 +131,7 @@ tr.cup-cutline td{border-bottom:2px solid var(--line);}
 .backline{display:inline-block; margin-bottom:14px; font-size:13px; color:var(--sub);}
 
 /* ---------- quick links (home page: portal / admin) ---------- */
-.quicklinks{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;}
-@media (max-width:600px){ .quicklinks{grid-template-columns:1fr;} }
+.quicklinks{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px; margin-bottom:28px;}
 .quicklink-card{
   display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
   border-radius:var(--radius); padding:16px 18px; color:var(--ink); text-decoration:none;

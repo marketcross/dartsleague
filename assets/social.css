@@ -4,9 +4,10 @@
 :root{
   --ink:#1c1f26; --sub:#5c6270; --line:#e3e5ea; --bg:#f6f7f9;
   --brand:#8b2f2f; --brand-dark:#6e2424; --brand-ink:#ffffff;
-  --ok:#2f7a4f; --ok-bg:#e9f6ee;
+  --ok:#2f7a4f; --ok-bg:#e9f6ee; --gold:#a9781f; --gold-bg:#fbf1dd;
 }
 *{box-sizing:border-box;}
+.hidden{display:none;}
 body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink);}
 .toolbar{max-width:600px; margin:0 auto 18px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
 .toolbar a{color:var(--sub); font-size:13px; text-decoration:none;}
@@ -16,7 +17,7 @@ body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemF
 .btn:disabled{opacity:.6; cursor:default;}
 
 /* the actual captured card */
-#captureCard{
+#captureCard, #hubCard{
   width:600px; max-width:100%; margin:0 auto; background:#fff; border-radius:18px;
   overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.08); border:1px solid var(--line);
 }
@@ -38,6 +39,27 @@ table.tcard th{font-size:11px; text-transform:uppercase; letter-spacing:.03em; c
 table.tcard td.num, table.tcard th.num{text-align:right;}
 table.tcard tr:first-child td{font-weight:800;}
 table.tcard tr:first-child td:first-child{color:var(--brand);}
+
+/* ---------- 180s / finishes round-up (shared markup with the homepage, see
+   weeklyHighlights()/highlightsHtml() in assets/data.js) ---------- */
+.card-highlights{padding:16px 26px 24px; border-top:1px solid var(--line);}
+.highlights-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin-bottom:10px;}
+.highlight-list{display:flex; flex-wrap:wrap; gap:8px;}
+.highlight-row{
+  display:flex; align-items:center; gap:6px; padding:7px 11px;
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-size:13.5px;
+}
+.highlight-name{font-weight:700;}
+.highlight-team{color:var(--sub);}
+.chip{display:inline-block; font-size:11.5px; padding:3px 9px; border-radius:20px; font-weight:700;}
+.chip.gold{background:var(--gold-bg); color:var(--gold);}
+
+/* ---------- hub page (social/index.html) ---------- */
+.hub-link{display:block; padding:16px 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;}
+.hub-link:last-child{border-bottom:none;}
+.hub-link .title{font-weight:700; font-size:16px; margin-bottom:2px;}
+.hub-link:hover .title{color:var(--brand);}
+.hub-link .desc{font-size:13px; color:var(--sub);}
 
 .empty{color:var(--sub); font-size:13.5px; padding:8px 0;}
 .err-banner{max-width:600px; margin:0 auto 16px; background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:13px; padding:10px 12px; border-radius:10px; display:none;}
