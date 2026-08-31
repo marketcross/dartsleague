@@ -15,12 +15,42 @@ body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemF
 .btn{font-family:inherit; font-size:14.5px; font-weight:700; border-radius:10px; border:none; cursor:pointer; padding:11px 18px; background:var(--brand); color:#fff;}
 .btn:hover{background:var(--brand-dark);}
 .btn:disabled{opacity:.6; cursor:default;}
+.toolbar select{font-family:inherit; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);}
 
-/* the actual captured card */
-#captureCard, #hubCard{
+/* the hub page's own (non-downloadable) card */
+#hubCard{
   width:600px; max-width:100%; margin:0 auto; background:#fff; border-radius:18px;
   overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.08); border:1px solid var(--line);
 }
+
+/* ---------- Facebook "poster" frame (fixtures.html / results.html / table.html) ----------
+   Fixed at 1080x1350 — Meta's current recommended 4:5 feed-image ratio — so the PNG
+   downloaded from any of these pages is already the right shape for a Facebook post,
+   with the league's own logo and colours baked in rather than a plain white card. The
+   scale-wrap below shrinks it to fit the screen for on-page preview only; see
+   fitPosterFrame()/downloadPosterFrame() in assets/data.js for how that's kept in sync
+   with the true 1080x1350 pixels that actually get captured. */
+.poster-scale-wrap{ width:100%; max-width:420px; margin:0 auto; overflow:hidden; }
+.poster{
+  width:1080px; height:1350px; padding:70px 56px 50px;
+  box-sizing:border-box;
+  background:radial-gradient(circle at 50% 30%, var(--brand) 0%, var(--brand-dark) 78%);
+  display:flex; flex-direction:column; align-items:center;
+  transform-origin:top left;
+  overflow:hidden;
+}
+.poster-brand{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; text-align:center;}
+.poster-brand img{height:96px; width:auto; margin-bottom:18px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.3));}
+.poster-brand .name{color:#fff; font-size:34px; font-weight:800; letter-spacing:.2px;}
+.poster-brand .season{color:#e8c675; font-size:16px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; margin-top:6px;}
+.poster-card-wrap{flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+.poster-card{
+  width:100%; max-height:100%; background:#fff; border-radius:22px; overflow:hidden;
+  box-shadow:0 14px 44px rgba(0,0,0,.28);
+  display:flex; flex-direction:column;
+}
+.poster-footer{flex:0 0 auto; color:#f3e3e3; font-size:20px; font-weight:700; letter-spacing:.3px; margin-top:30px;}
+
 .card-header{background:var(--brand); color:var(--brand-ink); padding:22px 26px;}
 .card-header .league{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.85;}
 .card-header h2{margin:6px 0 0; font-size:26px;}
