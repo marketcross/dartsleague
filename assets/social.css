@@ -41,47 +41,60 @@ body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemF
 }
 .poster-brand{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; text-align:center;}
 .poster-brand img{height:96px; width:auto; margin-bottom:18px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.3));}
-.poster-brand .name{color:#fff; font-size:34px; font-weight:800; letter-spacing:.2px;}
-.poster-brand .season{color:#e8c675; font-size:16px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; margin-top:6px;}
-.poster-card-wrap{flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+.poster-brand .name{color:#fff; font-size:40px; font-weight:800; letter-spacing:.2px;}
+.poster-brand .season{color:#e8c675; font-size:19px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; margin-top:8px;}
+.poster-card-wrap{flex:1 1 auto; min-height:0; width:100%; display:flex; overflow:hidden;}
 .poster-card{
-  width:100%; max-height:100%; background:#fff; border-radius:22px; overflow:hidden;
+  width:100%; background:#fff; border-radius:22px; overflow:hidden;
   box-shadow:0 14px 44px rgba(0,0,0,.28);
   display:flex; flex-direction:column;
 }
-.poster-footer{flex:0 0 auto; color:#f3e3e3; font-size:20px; font-weight:700; letter-spacing:.3px; margin-top:30px;}
+.poster-footer{flex:0 0 auto; color:#f3e3e3; font-size:24px; font-weight:700; letter-spacing:.3px; margin-top:30px;}
 
-.card-header{background:var(--brand); color:var(--brand-ink); padding:22px 26px;}
-.card-header .league{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.85;}
-.card-header h2{margin:6px 0 0; font-size:26px;}
-.card-header .sub{font-size:13.5px; opacity:.9; margin-top:4px;}
-.card-body{padding:20px 26px 26px;}
+/* Sized for a 1080px-wide poster that's usually seen shrunk down to thumbnail size
+   in a Facebook feed — text needs to read at a glance, not just be legible up close. */
+.card-header{flex:0 0 auto; background:var(--brand); color:var(--brand-ink); padding:30px 40px;}
+.card-header .league{font-size:19px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.9;}
+.card-header h2{margin:8px 0 0; font-size:46px;}
+.card-header .sub{font-size:18px; opacity:.9; margin-top:6px;}
+/* Fills whatever's left of the card's stretched height (see .poster-card-wrap above)
+   and centres its rows/table within it, rather than leaving them pinned to the top
+   with dead white space below — looks right whether there's 1 fixture or 7. */
+.card-body{
+  flex:1 1 auto; min-height:0; padding:16px 40px;
+  display:flex; flex-direction:column;
+  /* space-evenly rather than space-between: with several rows it spreads them out
+     to fill the card without shoving the first/last row flush against the card's
+     edge, and with just one row (or the "nothing to show" message) it centres it,
+     same as it would with a single item either way. */
+  justify-content:space-evenly;
+}
 
-.row{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
+.row{display:flex; justify-content:space-between; align-items:center; padding:22px 0; border-bottom:1.5px solid var(--line);}
 .row:last-child{border-bottom:none;}
-.row .teams{font-size:16px; font-weight:700;}
-.row .date{font-size:12.5px; color:var(--sub); margin-top:2px;}
-.row .score{font-size:19px; font-weight:800; color:var(--brand);}
+.row .teams{font-size:32px; font-weight:700; line-height:1.25;}
+.row .date{font-size:17px; color:var(--sub); margin-top:4px;}
+.row .score{font-size:40px; font-weight:800; color:var(--brand);}
 
-table.tcard{width:100%; border-collapse:collapse; font-size:14.5px;}
-table.tcard th, table.tcard td{padding:9px 6px; text-align:left; border-bottom:1px solid var(--line);}
-table.tcard th{font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--sub);}
+table.tcard{width:100%; border-collapse:collapse; font-size:23px;}
+table.tcard th, table.tcard td{padding:15px 8px; text-align:left; border-bottom:1.5px solid var(--line);}
+table.tcard th{font-size:15px; text-transform:uppercase; letter-spacing:.03em; color:var(--sub);}
 table.tcard td.num, table.tcard th.num{text-align:right;}
 table.tcard tr:first-child td{font-weight:800;}
 table.tcard tr:first-child td:first-child{color:var(--brand);}
 
 /* ---------- 180s / finishes round-up (shared markup with the homepage, see
    weeklyHighlights()/highlightsHtml() in assets/data.js) ---------- */
-.card-highlights{padding:16px 26px 24px; border-top:1px solid var(--line);}
-.highlights-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin-bottom:10px;}
-.highlight-list{display:flex; flex-wrap:wrap; gap:8px;}
+.card-highlights{flex:0 0 auto; padding:22px 40px 32px; border-top:1.5px solid var(--line);}
+.highlights-label{font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin-bottom:14px;}
+.highlight-list{display:flex; flex-wrap:wrap; gap:12px;}
 .highlight-row{
-  display:flex; align-items:center; gap:6px; padding:7px 11px;
-  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-size:13.5px;
+  display:flex; align-items:center; gap:9px; padding:11px 18px;
+  background:var(--bg); border:1px solid var(--line); border-radius:12px; font-size:19px;
 }
 .highlight-name{font-weight:700;}
 .highlight-team{color:var(--sub);}
-.chip{display:inline-block; font-size:11.5px; padding:3px 9px; border-radius:20px; font-weight:700;}
+.chip{display:inline-block; font-size:16px; padding:5px 14px; border-radius:22px; font-weight:700;}
 .chip.gold{background:var(--gold-bg); color:var(--gold);}
 
 /* ---------- hub page (social/index.html) ---------- */
@@ -91,5 +104,5 @@ table.tcard tr:first-child td:first-child{color:var(--brand);}
 .hub-link:hover .title{color:var(--brand);}
 .hub-link .desc{font-size:13px; color:var(--sub);}
 
-.empty{color:var(--sub); font-size:13.5px; padding:8px 0;}
+.empty{color:var(--sub); font-size:24px; padding:8px 0; text-align:center;}
 .err-banner{max-width:600px; margin:0 auto 16px; background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:13px; padding:10px 12px; border-radius:10px; display:none;}
