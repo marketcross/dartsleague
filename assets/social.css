@@ -39,7 +39,7 @@ body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemF
   transform-origin:top left;
   overflow:hidden;
 }
-.poster-brand{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; text-align:center;}
+.poster-brand{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:34px;}
 .poster-brand img{height:96px; width:auto; margin-bottom:18px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.3));}
 .poster-brand .name{color:#fff; font-size:40px; font-weight:800; letter-spacing:.2px;}
 .poster-brand .season{color:#e8c675; font-size:19px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; margin-top:8px;}
@@ -53,7 +53,11 @@ body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemF
 
 /* Sized for a 1080px-wide poster that's usually seen shrunk down to thumbnail size
    in a Facebook feed — text needs to read at a glance, not just be legible up close. */
-.card-header{flex:0 0 auto; background:var(--brand); color:var(--brand-ink); padding:30px 40px;}
+.card-header{
+  flex:0 0 auto; background:var(--brand-dark); color:var(--brand-ink); padding:30px 40px;
+  box-shadow:0 6px 16px rgba(0,0,0,.22);
+  position:relative; z-index:1;
+}
 .card-header .league{font-size:19px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.9;}
 .card-header h2{margin:8px 0 0; font-size:46px;}
 .card-header .sub{font-size:18px; opacity:.9; margin-top:6px;}
