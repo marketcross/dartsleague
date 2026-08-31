@@ -1,0 +1,112 @@
+/* Styles for the Facebook summary "download image" pages. These are deliberately
+   separate from the main site look — the captured card is designed to be readable
+   as a standalone social post, not a page in the site's nav. */
+:root{
+  --ink:#1c1f26; --sub:#5c6270; --line:#e3e5ea; --bg:#f6f7f9;
+  --brand:#8b2f2f; --brand-dark:#6e2424; --brand-ink:#ffffff;
+  --ok:#2f7a4f; --ok-bg:#e9f6ee; --gold:#a9781f; --gold-bg:#fbf1dd;
+}
+*{box-sizing:border-box;}
+.hidden{display:none;}
+body{margin:0; padding:24px 12px 48px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink);}
+.toolbar{max-width:600px; margin:0 auto 18px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+.toolbar a{color:var(--sub); font-size:13px; text-decoration:none;}
+.toolbar a:hover{text-decoration:underline;}
+.btn{font-family:inherit; font-size:14.5px; font-weight:700; border-radius:10px; border:none; cursor:pointer; padding:11px 18px; background:var(--brand); color:#fff;}
+.btn:hover{background:var(--brand-dark);}
+.btn:disabled{opacity:.6; cursor:default;}
+.toolbar select{font-family:inherit; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);}
+
+/* the hub page's own (non-downloadable) card */
+#hubCard{
+  width:600px; max-width:100%; margin:0 auto; background:#fff; border-radius:18px;
+  overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.08); border:1px solid var(--line);
+}
+
+/* ---------- Facebook "poster" frame (fixtures.html / results.html / table.html) ----------
+   Fixed at 1080x1350 — Meta's current recommended 4:5 feed-image ratio — so the PNG
+   downloaded from any of these pages is already the right shape for a Facebook post,
+   with the league's own logo and colours baked in rather than a plain white card. The
+   scale-wrap below shrinks it to fit the screen for on-page preview only; see
+   fitPosterFrame()/downloadPosterFrame() in assets/data.js for how that's kept in sync
+   with the true 1080x1350 pixels that actually get captured. */
+.poster-scale-wrap{ width:100%; max-width:420px; margin:0 auto; overflow:hidden; }
+.poster{
+  width:1080px; height:1350px; padding:70px 56px 50px;
+  box-sizing:border-box;
+  background:radial-gradient(circle at 50% 30%, var(--brand) 0%, var(--brand-dark) 78%);
+  display:flex; flex-direction:column; align-items:center;
+  transform-origin:top left;
+  overflow:hidden;
+}
+.poster-brand{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:34px;}
+.poster-brand img{height:96px; width:auto; margin-bottom:18px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.3));}
+.poster-brand .name{color:#fff; font-size:40px; font-weight:800; letter-spacing:.2px;}
+.poster-brand .season{color:#e8c675; font-size:19px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; margin-top:8px;}
+.poster-card-wrap{flex:1 1 auto; min-height:0; width:100%; display:flex; overflow:hidden;}
+.poster-card{
+  width:100%; background:#fff; border-radius:22px; overflow:hidden;
+  box-shadow:0 14px 44px rgba(0,0,0,.28);
+  display:flex; flex-direction:column;
+}
+.poster-footer{flex:0 0 auto; color:#f3e3e3; font-size:24px; font-weight:700; letter-spacing:.3px; margin-top:30px;}
+
+/* Sized for a 1080px-wide poster that's usually seen shrunk down to thumbnail size
+   in a Facebook feed — text needs to read at a glance, not just be legible up close. */
+.card-header{
+  flex:0 0 auto; background:var(--brand-dark); color:var(--brand-ink); padding:30px 40px;
+  box-shadow:0 6px 16px rgba(0,0,0,.22);
+  position:relative; z-index:1;
+}
+.card-header .league{font-size:19px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.9;}
+.card-header h2{margin:8px 0 0; font-size:46px;}
+.card-header .sub{font-size:18px; opacity:.9; margin-top:6px;}
+/* Fills whatever's left of the card's stretched height (see .poster-card-wrap above)
+   and centres its rows/table within it, rather than leaving them pinned to the top
+   with dead white space below — looks right whether there's 1 fixture or 7. */
+.card-body{
+  flex:1 1 auto; min-height:0; padding:16px 40px;
+  display:flex; flex-direction:column;
+  /* space-evenly rather than space-between: with several rows it spreads them out
+     to fill the card without shoving the first/last row flush against the card's
+     edge, and with just one row (or the "nothing to show" message) it centres it,
+     same as it would with a single item either way. */
+  justify-content:space-evenly;
+}
+
+.row{display:flex; justify-content:space-between; align-items:center; padding:22px 0; border-bottom:1.5px solid var(--line);}
+.row:last-child{border-bottom:none;}
+.row .teams{font-size:32px; font-weight:700; line-height:1.25;}
+.row .date{font-size:17px; color:var(--sub); margin-top:4px;}
+.row .score{font-size:40px; font-weight:800; color:var(--brand);}
+
+table.tcard{width:100%; border-collapse:collapse; font-size:23px;}
+table.tcard th, table.tcard td{padding:15px 8px; text-align:left; border-bottom:1.5px solid var(--line);}
+table.tcard th{font-size:15px; text-transform:uppercase; letter-spacing:.03em; color:var(--sub);}
+table.tcard td.num, table.tcard th.num{text-align:right;}
+table.tcard tr:first-child td{font-weight:800;}
+table.tcard tr:first-child td:first-child{color:var(--brand);}
+
+/* ---------- 180s / finishes round-up (shared markup with the homepage, see
+   weeklyHighlights()/highlightsHtml() in assets/data.js) ---------- */
+.card-highlights{flex:0 0 auto; padding:22px 40px 32px; border-top:1.5px solid var(--line);}
+.highlights-label{font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin-bottom:14px;}
+.highlight-list{display:flex; flex-wrap:wrap; gap:12px;}
+.highlight-row{
+  display:flex; align-items:center; gap:9px; padding:11px 18px;
+  background:var(--bg); border:1px solid var(--line); border-radius:12px; font-size:19px;
+}
+.highlight-name{font-weight:700;}
+.highlight-team{color:var(--sub);}
+.chip{display:inline-block; font-size:16px; padding:5px 14px; border-radius:22px; font-weight:700;}
+.chip.gold{background:var(--gold-bg); color:var(--gold);}
+
+/* ---------- hub page (social/index.html) ---------- */
+.hub-link{display:block; padding:16px 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;}
+.hub-link:last-child{border-bottom:none;}
+.hub-link .title{font-weight:700; font-size:16px; margin-bottom:2px;}
+.hub-link:hover .title{color:var(--brand);}
+.hub-link .desc{font-size:13px; color:var(--sub);}
+
+.empty{color:var(--sub); font-size:24px; padding:8px 0; text-align:center;}
+.err-banner{max-width:600px; margin:0 auto 16px; background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:13px; padding:10px 12px; border-radius:10px; display:none;}
