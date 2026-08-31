@@ -3,9 +3,12 @@
    itself from it. Nothing here is specific to one page. */
 
 const SITE_CONFIG = {
-  // Paste your Apps Script web app URL here (Deploy > Manage deployments > Web app URL),
-  // keeping "?page=api" on the end exactly as shown. Example:
-  // 'https://script.google.com/macros/s/AKfycbXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec?page=api'
+  // This is the live Apps Script web app URL for this league (Deploy > Manage
+  // deployments > Web app URL), with "?page=api" on the end as required.
+  //
+  // IMPORTANT — do not reset this to a placeholder when editing this file for any
+  // other reason: this exact line going missing once already took the whole site
+  // down (every page failed to load with a fetch error / looked like a 404).
   API_URL: 'https://script.google.com/macros/s/AKfycbw0aMfw5fbMGXeVrs4DJTn5vYUfgaipM3At3h7UVVt9ZAe_rhSElVuX61GR3X8SKFfmpQ/exec?page=api',
 };
 
@@ -90,6 +93,57 @@ function setStoredPasscode(code) {
 }
 function clearStoredPasscode() {
   try { localStorage.removeItem(PASSCODE_KEY); } catch (e) { /* storage unavailable */ }
+}
+
+// Groups a fixtures array by its dateISO (preserving each fixture's own order within
+// its date), returning one entry per distinct date. Used by the social fixtures/
+// results pickers so a visitor can jump straight to a specific match night instead of
+// only ever seeing a rolling window.
+function groupFixturesByDate(fixtures) {
+  const byDate = {};
+  const order = [];
+  fixtures.forEach(f => {
+    if (!byDate[f.dateISO]) { byDate[f.dateISO] = { dateISO: f.dateISO, date: f.date, fixtures: [] }; order.push(f.dateISO); }
+    byDate[f.dateISO].fixtures.push(f);
+  });
+  return order.map(iso => byDate[iso]);
+}
+
+// ---------- Facebook "poster" frame scaling/export ----------
+// Shared by social/fixtures.html, social/results.html and social/table.html: each
+// wraps its downloadable content in a fixed 1080x1350 #posterFrame (Meta's current
+// recommended 4:5 feed-image ratio) carrying the league's own logo/colour/footer, so
+// every downloaded PNG is already the right shape — no cropping needed on Facebook's
+// end. The frame is visually scaled down with a CSS transform to fit inside its
+// on-page preview box on small screens; transform doesn't affect offsetWidth/Height,
+// so the frame's true 1080x1350 layout size is unaffected and that's what gets
+// captured (after briefly clearing the transform so html2canvas doesn't shrink it).
+function fitPosterFrame(frameId, wrapId) {
+  const wrap = document.getElementById(wrapId);
+  const frame = document.getElementById(frameId);
+  if (!wrap || !frame) return;
+  const scale = wrap.clientWidth / frame.offsetWidth;
+  frame.style.transform = 'scale(' + scale + ')';
+  wrap.style.height = Math.round(frame.offsetHeight * scale) + 'px';
+}
+
+function downloadPosterFrame(frameId, filename, btn) {
+  const frame = document.getElementById(frameId);
+  const prevTransform = frame.style.transform;
+  btn.disabled = true; btn.textContent = 'Generating…';
+  frame.style.transform = 'none';
+  html2canvas(frame, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+    frame.style.transform = prevTransform;
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false; btn.textContent = 'Download image';
+  }).catch(err => {
+    frame.style.transform = prevTransform;
+    btn.disabled = false; btn.textContent = 'Download image';
+    showPageError(err);
+  });
 }
 
 // Submitted fixtures (results) newest first; everything else (upcoming) soonest first.
