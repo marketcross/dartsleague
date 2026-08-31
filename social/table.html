@@ -10,18 +10,29 @@
 
 <div class="err-banner" id="errBanner"></div>
 <div class="toolbar">
-  <a href="../index.html">← Back to site</a>
-  <select id="tableSelect" style="display:none; padding:9px 10px; border:1px solid var(--line); border-radius:10px; font-size:14px; background:#fff;"></select>
+  <a href="index.html">← Back to social hub</a>
+  <select id="tableSelect" class="hidden"></select>
   <button class="btn" id="downloadBtn" disabled>Download image</button>
 </div>
 
-<div id="captureCard">
-  <div class="card-header">
-    <div class="league">Market Cross Darts League</div>
-    <h2>League Table</h2>
-    <div class="sub" id="cardSub">Loading…</div>
+<div class="poster-scale-wrap" id="posterWrap">
+  <div class="poster" id="posterFrame">
+    <div class="poster-brand">
+      <img src="../assets/logo.png" alt="Market Cross Darts League">
+      <div class="name">Market Cross Darts League</div>
+      <div class="season">2026/27 Season</div>
+    </div>
+    <div class="poster-card-wrap">
+      <div class="poster-card">
+        <div class="card-header">
+          <div class="league" id="cardSub">Loading…</div>
+          <h2>League Table</h2>
+        </div>
+        <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
+      </div>
+    </div>
+    <div class="poster-footer">marketcrossdarts.uk</div>
   </div>
-  <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
 </div>
 
 <script src="../assets/data.js"></script>
@@ -43,7 +54,7 @@ loadLeagueData().then(data => {
 
   const sel = document.getElementById('tableSelect');
   if (TABLE_GROUPS.length > 1) {
-    sel.style.display = '';
+    sel.classList.remove('hidden');
     sel.innerHTML = TABLE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.label)}</option>`).join('');
     sel.addEventListener('change', () => renderTable(TABLE_GROUPS[sel.value]));
   }
@@ -53,7 +64,7 @@ loadLeagueData().then(data => {
 }).catch(showPageError);
 
 function renderTable(group) {
-  document.querySelector('#captureCard h2').textContent = group.label ? group.label + ' Table' : 'League Table';
+  document.querySelector('.poster-card h2').textContent = group.label ? group.label + ' Table' : 'League Table';
   const body = document.getElementById('cardBody');
   if (!group.table.length) {
     body.innerHTML = '<p class="empty">No teams set up yet.</p>';
@@ -73,16 +84,11 @@ function formatToday(iso) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const btn = document.getElementById('downloadBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
-  html2canvas(document.getElementById('captureCard'), { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'mcdl-league-table.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    btn.disabled = false; btn.textContent = 'Download image';
-  });
+fitPosterFrame('posterFrame', 'posterWrap');
+window.addEventListener('resize', () => fitPosterFrame('posterFrame', 'posterWrap'));
+
+document.getElementById('downloadBtn').addEventListener('click', function () {
+  downloadPosterFrame('posterFrame', 'mcdl-league-table.png', this);
 });
 </script>
 </body>

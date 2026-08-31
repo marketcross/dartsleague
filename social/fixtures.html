@@ -10,17 +10,29 @@
 
 <div class="err-banner" id="errBanner"></div>
 <div class="toolbar">
-  <a href="../index.html">← Back to site</a>
+  <a href="index.html">← Back to social hub</a>
+  <select id="dateSelect" class="hidden"></select>
   <button class="btn" id="downloadBtn" disabled>Download image</button>
 </div>
 
-<div id="captureCard">
-  <div class="card-header">
-    <div class="league">Market Cross Darts League</div>
-    <h2>Upcoming Fixtures</h2>
-    <div class="sub" id="cardSub">Loading…</div>
+<div class="poster-scale-wrap" id="posterWrap">
+  <div class="poster" id="posterFrame">
+    <div class="poster-brand">
+      <img src="../assets/logo.png" alt="Market Cross Darts League">
+      <div class="name">Market Cross Darts League</div>
+      <div class="season">2026/27 Season</div>
+    </div>
+    <div class="poster-card-wrap">
+      <div class="poster-card">
+        <div class="card-header">
+          <div class="league">Upcoming Fixtures</div>
+          <h2 id="cardSub">Loading…</h2>
+        </div>
+        <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
+      </div>
+    </div>
+    <div class="poster-footer">marketcrossdarts.uk</div>
   </div>
-  <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
 </div>
 
 <script src="../assets/data.js"></script>
@@ -30,39 +42,48 @@ function diffDays(fromISO, toISO) {
   return Math.round((new Date(toISO + 'T00:00:00') - new Date(fromISO + 'T00:00:00')) / 86400000);
 }
 
-loadLeagueData().then(data => {
-  const upcoming = data.fixtures
-    .filter(f => f.status !== 'Submitted' && diffDays(data.today, f.dateISO) >= 0 && diffDays(data.today, f.dateISO) <= 7)
-    .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+let DATE_GROUPS = [];
 
-  document.getElementById('cardSub').textContent = upcoming.length
-    ? `${upcoming[0].date} – ${upcoming[upcoming.length - 1].date}`
-    : 'Nothing scheduled in the next 7 days';
-
+function renderDate(group) {
+  document.getElementById('cardSub').textContent = group ? group.date : 'Nothing scheduled';
   const body = document.getElementById('cardBody');
-  body.innerHTML = upcoming.length
-    ? upcoming.map(f => `
+  body.innerHTML = (group && group.fixtures.length)
+    ? group.fixtures.map(f => `
       <div class="row">
-        <div>
-          <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</div>
-        </div>
-        <div class="date" style="font-size:14px; font-weight:600;">${escapeHtml(f.date)}</div>
+        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</div>
+        ${f.competition && f.competition !== 'League' ? `<div class="date">${escapeHtml(f.competition)}</div>` : ''}
       </div>`).join('')
     : '<p class="empty">No fixtures to show.</p>';
+}
+
+loadLeagueData().then(data => {
+  const upcoming = data.fixtures.filter(f => f.status !== 'Submitted');
+  DATE_GROUPS = groupFixturesByDate(upcoming).sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+
+  const sel = document.getElementById('dateSelect');
+  if (DATE_GROUPS.length) {
+    sel.classList.remove('hidden');
+    sel.innerHTML = DATE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.date)}</option>`).join('');
+    // Defaults to the next date on or after today — "what's coming up next" — but the
+    // dropdown lets you pick any further-ahead match night to see fixtures in advance.
+    let defaultIdx = DATE_GROUPS.findIndex(g => diffDays(data.today, g.dateISO) >= 0);
+    if (defaultIdx === -1) defaultIdx = DATE_GROUPS.length - 1;
+    sel.value = defaultIdx;
+    sel.addEventListener('change', () => renderDate(DATE_GROUPS[Number(sel.value)]));
+    renderDate(DATE_GROUPS[defaultIdx]);
+  } else {
+    sel.classList.add('hidden');
+    renderDate(null);
+  }
 
   document.getElementById('downloadBtn').disabled = false;
 }).catch(showPageError);
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const btn = document.getElementById('downloadBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
-  html2canvas(document.getElementById('captureCard'), { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'mcdl-upcoming-fixtures.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    btn.disabled = false; btn.textContent = 'Download image';
-  });
+fitPosterFrame('posterFrame', 'posterWrap');
+window.addEventListener('resize', () => fitPosterFrame('posterFrame', 'posterWrap'));
+
+document.getElementById('downloadBtn').addEventListener('click', function () {
+  downloadPosterFrame('posterFrame', 'mcdl-upcoming-fixtures.png', this);
 });
 </script>
 </body>
