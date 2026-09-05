@@ -20,19 +20,20 @@ img{max-width:100%;}
 /* ---------- layout ---------- */
 .wrap{max-width:var(--maxw); margin:0 auto; padding:0 16px 56px;}
 header.site{background:var(--brand); color:var(--brand-ink); margin-bottom:20px;}
-header.site .inner{max-width:var(--maxw); margin:0 auto; padding:18px 16px;}
+header.site .inner{max-width:var(--maxw); margin:0 auto; padding:18px 16px; position:relative;}
 header.site h1{margin:0; font-size:20px; font-weight:700;}
 header.site h1 a{color:inherit; text-decoration:none;}
-header.site .tagline{font-size:12.5px; opacity:.85; margin-top:2px;}
-/* Brand on the left, season sponsor top-right — wraps to its own (still
-   right-aligned, via the auto margin below) line on narrow screens rather
-   than crowding or overlapping the title. */
-.header-top{display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px 20px;}
-.brand-row{display:flex; align-items:center; gap:14px;}
+.brand-row{display:flex; align-items:center; gap:14px; padding-right:64px;}
 .site-logo{height:48px; width:auto; flex-shrink:0; display:block;}
-.sponsor-badge{display:flex; align-items:center; gap:9px; margin-left:auto; padding-top:4px;}
-.sponsor-label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; opacity:.75; white-space:nowrap;}
-.sponsor-logo{height:34px; width:auto; display:block;}
+/* Season sponsor badge — a single pre-built "Sponsored by <logo>" image,
+   pinned to the header's top-right corner on every screen size (including
+   mobile) rather than sitting in the normal flex flow, so it never wraps
+   onto its own line or fights the nav for room on a small phone screen. */
+.sponsor-badge{position:absolute; top:14px; right:16px; height:46px; width:auto; display:block;}
+@media (max-width:700px){
+  .sponsor-badge{height:34px; top:12px; right:12px;}
+  .brand-row{padding-right:48px;}
+}
 nav.site{display:flex; flex-wrap:wrap; gap:4px; margin-top:14px;}
 nav.site a{
   color:var(--brand-ink); font-size:13.5px; font-weight:600; padding:7px 12px;

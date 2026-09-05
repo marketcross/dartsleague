@@ -40,16 +40,16 @@
     return CURRENT_OVERRIDES[file] || file;
   }
 
-  // Season sponsor badge, top-right of the header. To swap or remove the
-  // sponsor in future, this is the only place that needs to change.
-  var SPONSOR = { name: 'Trebles', logo: 'assets/sponsor-trebles.png' };
+  // Season sponsor badge, pinned to the header's top-right corner on every
+  // screen size (a pre-built "Sponsored by <logo>" image, rather than a
+  // separate text label + logo, so it never has to wrap or fight the nav for
+  // room on a small phone screen). To swap or remove the sponsor in future,
+  // this is the only place that needs to change.
+  var SPONSOR = { name: 'Trebles', logo: 'assets/sponsor-badge.png' };
 
   function sponsorBadgeHtml() {
     if (!SPONSOR) return '';
-    return '<div class="sponsor-badge">' +
-      '<span class="sponsor-label">Sponsored by</span>' +
-      '<img src="' + SPONSOR.logo + '" alt="' + SPONSOR.name + '" class="sponsor-logo">' +
-      '</div>';
+    return '<img src="' + SPONSOR.logo + '" alt="Sponsored by ' + SPONSOR.name + '" class="sponsor-badge">';
   }
 
   function headerInnerHtml() {
@@ -63,15 +63,10 @@
       'class="icon-link" aria-label="Market Cross Darts League on Facebook">' + FACEBOOK_ICON_SVG + '</a>';
     return '' +
       '<div class="inner">' +
-      '<div class="header-top">' +
+      sponsorBadgeHtml() +
       '<div class="brand-row">' +
       '<img src="assets/logo.png" alt="" class="site-logo" width="35" height="48">' +
-      '<div>' +
       '<h1><a href="index.html">Market Cross Darts League</a></h1>' +
-      '<div class="tagline">News, fixtures, results, league tables and stats</div>' +
-      '</div>' +
-      '</div>' +
-      sponsorBadgeHtml() +
       '</div>' +
       '<nav class="site">\n      ' + navHtml + '\n      ' + facebookLink + '\n    </nav>' +
       '</div>';
