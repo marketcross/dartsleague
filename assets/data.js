@@ -217,7 +217,8 @@ function weeklyHighlights(fixtures) {
   });
   return Object.values(byPlayer)
     .filter(p => p.oneEighties > 0 || p.bestFinish)
-    .sort((a, b) => b.oneEighties - a.oneEighties || (b.bestFinish || 0) - (a.bestFinish || 0) || a.name.localeCompare(b.name));
+    // Most 180s first, then grouped by team, then highest finish — see weeklyHighlights().
+    .sort((a, b) => b.oneEighties - a.oneEighties || a.team.localeCompare(b.team) || (b.bestFinish || 0) - (a.bestFinish || 0) || a.name.localeCompare(b.name));
 }
 
 // Shared markup for a weeklyHighlights() list — used on both the homepage round-up
