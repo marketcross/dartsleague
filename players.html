@@ -57,6 +57,13 @@ function renderAll() {
 function renderTable(list) {
   const el = document.getElementById('statsTable');
   if (!list.length) { el.innerHTML = '<p class="empty">No games played yet.</p>'; return; }
+  // Most overall wins first; ties broken by highest finish, then by 180s.
+  const sorted = list.slice().sort((a, b) =>
+    b.won - a.won ||
+    (b.bestFinish || 0) - (a.bestFinish || 0) ||
+    b.oneEighties - a.oneEighties ||
+    a.name.localeCompare(b.name)
+  );
   el.innerHTML = `<table class="data">
     <thead><tr>
       <th>Player</th><th>Team</th>
@@ -66,7 +73,7 @@ function renderTable(list) {
       <th class="num">180s</th><th class="num">Best finish</th>
     </tr></thead>
     <tbody>
-      ${list.map(p => `
+      ${sorted.map(p => `
       <tr>
         <td>${escapeHtml(p.name)}</td>
         <td><a href="team.html?name=${teamParam(p.team)}">${escapeHtml(p.team)}</a></td>
