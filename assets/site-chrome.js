@@ -88,4 +88,17 @@
     var footerEl = document.getElementById('site-footer');
     if (footerEl) footerEl.innerHTML = footerInnerHtml();
   });
+
+  // Cloudflare Web Analytics — a free, cookieless page-view beacon (see
+  // https://developers.cloudflare.com/web-analytics/). Added here, once,
+  // rather than pasted into every page's HTML individually, since every page
+  // already loads this one shared file — this is the only place a future
+  // change to it (a new token, or removing it) needs to happen.
+  (function () {
+    var beacon = document.createElement('script');
+    beacon.type = 'module';
+    beacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    beacon.setAttribute('data-cf-beacon', '{"token": "7a25fd72c9c74600a934b91199b6a7f4"}');
+    document.head.appendChild(beacon);
+  })();
 })();
