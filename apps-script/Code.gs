@@ -987,11 +987,13 @@ function computePlayerStats_(allFixtures, allGamesIn, allStatsIn) {
 // cache whenever possible, so most website visitors get an instant answer instead
 // of every one of them paying for a full ~6 second rebuild from the sheet.
 //
-// Why the old 20-second cache never actually worked: CacheService refuses anything
-// over 100KB per entry, and this season's data had grown just past that — so the
-// put() quietly failed every time and every visitor got a full rebuild. Now the JSON
-// is gzip-compressed (typically ~10x smaller) and, if it's somehow still too big,
-// split across several cache entries — so it always fits.
+// What was wrong with the old 20-second cache: it only helped visitors who arrived
+// within 20 seconds of someone else, so most still waited for a full rebuild. And
+// CacheService refuses anything over 100KB per entry — the data was ~90KB four weeks
+// into the 2026/27 season and grows ~1.5KB per submitted fixture, so it was about to
+// stop caching altogether (put() fails silently). Now the JSON is gzip-compressed
+// (~10x smaller: ~90KB -> ~9KB) and, if it's ever still too big, split across several
+// cache entries — so it keeps fitting however large a season gets.
 //
 // Two copies are kept:
 //   - FRESH: up to 60 seconds old. Normal visitors get this.
