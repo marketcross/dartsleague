@@ -442,8 +442,68 @@ function saveGameToServer(g) {
     score: g.score || '',
   };
   flashSaving();
-  callRpc('saveGame', state.fixture.fixtureId, g.n, payload).then(flashSaved).catch(showError);
+  queueGameSave(g.n, payload);
 }
+
+// ---------- Reliable autosave ----------
+// A save can fail for reasons nobody controls on match night: a patchy pub signal,
+// or the sheet briefly busy with other captains' saves. Previously a failed save
+// just flashed an error for 6 seconds and was forgotten — the game looked saved on
+// this screen but never reached the sheet. Now each game's latest entry is kept
+// until the sheet confirms it, retried automatically (2s, 4s, 8s… up to 30s apart),
+// and a warning stays on screen until it goes through.
+const pendingSaves = {};   // "fixtureId|game" -> { fixtureId, n, payload } not yet confirmed
+const saveInFlight = {};   // key -> true while a request is out
+const saveAttempts = {};   // key -> consecutive failures
+
+function queueGameSave(n, payload) {
+  const fixtureId = state.fixture.fixtureId; // pinned now, so a retry can never land on a different fixture
+  const key = fixtureId + '|' + n;
+  pendingSaves[key] = { fixtureId, n, payload }; // newest entry always wins — older unsent ones are dropped
+  sendGameSave(key);
+}
+
+function sendGameSave(key) {
+  const job = pendingSaves[key];
+  if (saveInFlight[key] || !job) return;
+  saveInFlight[key] = true;
+  callRpc('saveGame', job.fixtureId, job.n, job.payload).then(() => {
+    saveInFlight[key] = false;
+    saveAttempts[key] = 0;
+    if (pendingSaves[key] === job) delete pendingSaves[key]; // a newer edit may have arrived meanwhile
+    if (pendingSaves[key]) return sendGameSave(key);
+    updateUnsavedWarning();
+    if (!Object.keys(pendingSaves).length) flashSaved();
+  }).catch(err => {
+    saveInFlight[key] = false;
+    // A wrong/expired access code won't fix itself by retrying — show it and stop.
+    if (/code isn't right/i.test(err && err.message)) { showError(err); updateUnsavedWarning(); return; }
+    saveAttempts[key] = (saveAttempts[key] || 0) + 1;
+    updateUnsavedWarning();
+    const delay = Math.min(30000, 2000 * Math.pow(2, saveAttempts[key] - 1));
+    setTimeout(() => sendGameSave(key), delay);
+  });
+}
+
+function updateUnsavedWarning() {
+  const nums = Object.keys(pendingSaves).filter(k => saveAttempts[k] > 0 || !saveInFlight[k])
+    .map(k => pendingSaves[k].n).sort((a, b) => a - b);
+  let el = document.getElementById('unsavedWarn');
+  if (!nums.length) { if (el) el.remove(); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'unsavedWarn';
+    el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#fdecec;border:1px solid #f2b8b8;' +
+      'color:#8a2323;border-radius:12px;padding:10px 14px;font:600 14px/1.35 system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.15);';
+    document.body.appendChild(el);
+  }
+  el.textContent = 'Not saved yet: game ' + nums.join(', ') + ' — retrying automatically. Keep this page open until this message goes.';
+}
+
+// Warn before leaving the page while anything is still unsaved.
+window.addEventListener('beforeunload', e => {
+  if (Object.keys(pendingSaves).length) { e.preventDefault(); e.returnValue = ''; }
+});
 function flashSaving() {
   const el = document.getElementById('autosaveMsg');
   el.textContent = 'Saving…'; el.classList.add('show');
