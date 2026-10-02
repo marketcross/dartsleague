@@ -58,8 +58,15 @@ That's the only setup step — every page fetches from this one address.
 
 ## Notes
 
-- The site only ever shows a fixture's full breakdown once you've **submitted**
-  it in the captain portal — nothing half-entered shows publicly.
+- While a fixture is being entered in the captain portal it shows as **Live** on
+  the site, with the running score and games so far (open pages refresh every
+  minute while anything is live). It's clearly marked as not final, and league
+  tables / season stats only ever count **submitted** results.
+- The Apps Script code lives in `apps-script/Code.gs` — paste it into the Apps
+  Script editor's Code.gs (replacing everything), Save, then Deploy → Manage
+  deployments → pencil → **New version** → Deploy. Don't keep backup copies as
+  extra files inside the Apps Script project: every .gs file runs together, so a
+  copy clashes with the real one and breaks the whole script.
 - Archived players (via the player admin page) drop out of "current squad" on
   the team page, but their past results and stats stay exactly as they were.
 - If a page shows a red error banner about not loading league data, it's almost
