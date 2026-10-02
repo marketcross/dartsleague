@@ -40,16 +40,28 @@ function render(f) {
     <h2 class="page-title">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)}</h2>
     <p class="page-sub">${f.competition ? escapeHtml(f.competition) + ' · ' : ''}${escapeHtml(f.date)} · <span class="status-tag ${s.cls}">${s.text}</span></p>`;
 
-  if (f.status !== 'Submitted') {
-    html += `<div class="card"><p class="empty">No result yet — check back after the fixture is played.</p></div>`;
+  const live = isLive(f);
+  const hasGames = (f.games || []).some(g => g.winnerTeam || g.homePlayer1 || g.awayPlayer1);
+  if (f.status !== 'Submitted' && !(live && hasGames)) {
+    html += live
+      ? `<div class="card"><p class="empty">This match is under way — scores will appear here as the captains enter them.</p></div>`
+      : `<div class="card"><p class="empty">No result yet — check back after the fixture is played.</p></div>`;
     document.getElementById('content').innerHTML = html;
     return;
+  }
+
+  // Live: running score from the games entered so far; final score once submitted.
+  const ls = live ? liveScore(f) : null;
+  const homeScore = live ? ls.home : f.homePoints;
+  const awayScore = live ? ls.away : f.awayPoints;
+  if (live) {
+    html += `<p class="live-note"><span class="live-dot"></span>Live — ${ls.played} of 9 games entered. Not final until the captains submit the result.</p>`;
   }
 
   html += `<div class="card">
     <div class="fixture-row" style="border-bottom:none;">
       <div class="teams" style="font-size:18px;">${escapeHtml(f.homeTeam)}</div>
-      <div class="result" style="font-size:22px;">${f.homePoints} – ${f.awayPoints}</div>
+      <div class="result" style="font-size:22px;">${homeScore} – ${awayScore}</div>
     </div>
     <div class="fixture-row" style="border-bottom:none; padding-top:0;">
       <div class="teams" style="font-size:18px;">${escapeHtml(f.awayTeam)}</div>
@@ -58,24 +70,26 @@ function render(f) {
   </div>`;
 
   html += `<h2 class="section-title">Games</h2><div class="card">`;
-  html += f.games.map(g => {
+  html += (f.games || []).map(g => {
     const tag = (g.type === 'Pairs' ? 'Pairs ' : 'Singles ') + (g.type === 'Pairs' ? g.n : g.n - 3);
     const home = g.type === 'Pairs' ? [g.homePlayer1, g.homePlayer2].filter(Boolean).join(' & ') : (g.homePlayer1 || '—');
     const away = g.type === 'Pairs' ? [g.awayPlayer1, g.awayPlayer2].filter(Boolean).join(' & ') : (g.awayPlayer1 || '—');
-    const homeScore = scoreForTeam(g, f.homeTeam);
+    const gameScore = g.winnerTeam ? scoreForTeam(g, f.homeTeam) : (live ? '<span class="status-tag upcoming">To play</span>' : '—');
     return `
     <div class="fixture-row">
       <div>
         <div style="font-size:11px; color:var(--sub); text-transform:uppercase; font-weight:700; letter-spacing:.02em;">${tag}</div>
-        <div class="teams">${escapeHtml(home)} <span style="color:var(--sub); font-weight:400;">v</span> ${escapeHtml(away)}</div>
+        <div class="teams">${live && !g.homePlayer1 && !g.awayPlayer1
+          ? '<span style="color:var(--sub); font-weight:400;">Not started yet</span>'
+          : `${escapeHtml(home)} <span style="color:var(--sub); font-weight:400;">v</span> ${escapeHtml(away)}`}</div>
       </div>
-      <span class="result">${homeScore}</span>
+      <span class="result">${gameScore}</span>
     </div>`;
   }).join('');
   html += `</div>`;
 
-  const eighties = f.stats.filter(s => String(s.type) === '180');
-  const finishes = f.stats.filter(s => String(s.type) === 'finish');
+  const eighties = (f.stats || []).filter(s => String(s.type) === '180');
+  const finishes = (f.stats || []).filter(s => String(s.type) === 'finish');
   if (eighties.length || finishes.length) {
     html += `<h2 class="section-title">180s &amp; 100+ finishes</h2><div class="card">`;
     if (eighties.length) {

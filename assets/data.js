@@ -66,7 +66,7 @@ function _showUpdateBar() {
   const bar = document.createElement('button');
   bar.id = 'mcdlUpdateBar';
   bar.type = 'button';
-  bar.textContent = 'New results are in — tap to update';
+  bar.textContent = 'New scores are in — tap to update';
   bar.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;' +
     'background:#1f5c45;color:#fff;border:0;border-radius:999px;padding:10px 18px;font:600 14px/1.2 system-ui,sans-serif;' +
     'box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;';
@@ -75,27 +75,57 @@ function _showUpdateBar() {
 }
 
 // Every page calls this on load and renders from what it resolves with.
+// What the page is currently showing — compared against each fresh copy.
+let _shownData = null;
+
+// Called with each fresh copy fetched in the background. Does nothing unless the
+// data has actually changed; then reloads the page (instant, from the copy just
+// saved) or, if the visitor is mid-scroll, shows the "tap to update" bar.
+function _handleFreshData(live) {
+  if (_sameLeagueData(live.data, _shownData)) return;
+  // Safety net: never auto-reload twice within 45 seconds (e.g. if the data ever
+  // contains something that changes on every request), fall back to the bar.
+  let recentlyReloaded = false;
+  try {
+    recentlyReloaded = Date.now() - Number(sessionStorage.getItem('mcdlAutoReloadAt') || 0) < 45000;
+    if (!recentlyReloaded && !_userInteracted) sessionStorage.setItem('mcdlAutoReloadAt', String(Date.now()));
+  } catch (e) { recentlyReloaded = true; }
+  if (_userInteracted || recentlyReloaded) _showUpdateBar();
+  else location.reload();
+}
+
+// While any fixture is live (match night), keep checking for new scores every
+// minute — only while the tab is actually on screen, so a phone left in a pocket
+// isn't polling all night.
+const LIVE_POLL_MS = 60 * 1000;
+let _livePollTimer = null;
+function _startLivePollingIfNeeded(data) {
+  if (_livePollTimer || !(data.fixtures || []).some(isLive)) return;
+  _livePollTimer = setInterval(() => {
+    if (document.visibilityState !== 'visible' || document.getElementById('mcdlUpdateBar')) return;
+    _fetchLiveData().then(_handleFreshData).catch(err => console.warn('Live refresh failed:', err));
+  }, LIVE_POLL_MS);
+}
+
+// Every page calls this on load and renders from what it resolves with.
 function loadLeagueData() {
   if (_dataPromise) return _dataPromise;
   const cached = _readCachedData();
   if (cached) {
+    _shownData = cached.data;
     _dataPromise = Promise.resolve(cached.data);
     // Background refresh — only acts if something actually changed.
     _fetchLiveData().then(live => {
-      if (_sameLeagueData(live.data, cached.data)) return;
-      // Safety net: never auto-reload twice within a minute (e.g. if the data ever
-      // contains something that changes on every request), fall back to the bar.
-      let recentlyReloaded = false;
-      try {
-        recentlyReloaded = Date.now() - Number(sessionStorage.getItem('mcdlAutoReloadAt') || 0) < 60000;
-        if (!recentlyReloaded && !_userInteracted) sessionStorage.setItem('mcdlAutoReloadAt', String(Date.now()));
-      } catch (e) { recentlyReloaded = true; }
-      if (_userInteracted || recentlyReloaded) _showUpdateBar();
-      else location.reload();
+      _handleFreshData(live);
+      _startLivePollingIfNeeded(live.data);
     }).catch(err => console.warn('Background refresh of league data failed:', err));
   } else {
     _dataPromise = _fetchLiveData()
-      .then(live => live.data)
+      .then(live => {
+        _shownData = live.data;
+        _startLivePollingIfNeeded(live.data);
+        return live.data;
+      })
       .catch(err => { _dataPromise = null; throw err; });
   }
   return _dataPromise;
@@ -234,8 +264,40 @@ function splitFixtures(fixtures) {
 
 function statusLabel(status) {
   if (status === 'Submitted') return { text: 'Result', cls: 'submitted' };
-  if (status === 'In progress') return { text: 'In progress', cls: 'progress' };
+  if (status === 'In progress') return { text: 'Live', cls: 'progress' };
   return { text: 'Upcoming', cls: 'upcoming' };
+}
+
+// ---------- Live (in-progress) fixtures ----------
+// A fixture is "live" from the first game a captain saves until it's submitted.
+// The running score is worked out from the games entered so far (1 point per game
+// won), since the fixture's official homePoints/awayPoints are only final on submit.
+function isLive(f) { return f.status === 'In progress'; }
+
+function liveScore(f) {
+  let home = 0, away = 0, played = 0;
+  (f.games || []).forEach(g => {
+    if (!g.winnerTeam) return;
+    played++;
+    if (g.winnerTeam === f.homeTeam) home++; else if (g.winnerTeam === f.awayTeam) away++;
+  });
+  return { home, away, played };
+}
+
+// The right-hand side of a fixture row: final score, live running score, or status.
+// `forTeam` (optional) shows the score from that team's side first (team page).
+function fixtureScoreHtml(f, forTeam) {
+  const flip = forTeam && f.awayTeam === forTeam;
+  if (f.status === 'Submitted') {
+    return `<span class="result">${flip ? f.awayPoints : f.homePoints}–${flip ? f.homePoints : f.awayPoints}</span>`;
+  }
+  if (isLive(f)) {
+    const s = liveScore(f);
+    const score = s.played ? `${flip ? s.away : s.home}–${flip ? s.home : s.away} ` : '';
+    return `<span class="result live">${score}<span class="status-tag progress"><span class="live-dot"></span>Live</span></span>`;
+  }
+  const s = statusLabel(f.status);
+  return `<span class="status-tag ${s.cls}">${s.text}</span>`;
 }
 
 // Renders a game's leg score from the winning team's perspective vs a given team name.

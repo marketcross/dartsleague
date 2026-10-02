@@ -65,8 +65,7 @@ function renderList() {
   const el = document.getElementById('fixtureList');
   if (!list.length) { el.innerHTML = '<p class="empty">No fixtures found.</p>'; return; }
   el.innerHTML = list.map(f => {
-    const s = statusLabel(f.status);
-    const result = f.status === 'Submitted' ? `<span class="result">${f.homePoints}–${f.awayPoints}</span>` : `<span class="status-tag ${s.cls}">${s.text}</span>`;
+    const result = fixtureScoreHtml(f);
     return `
     <a class="fixture-row" style="text-decoration:none; color:inherit;" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">
       <div>

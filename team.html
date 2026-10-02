@@ -95,15 +95,7 @@ function render(data) {
 function rowHtml(f) {
   const opponent = f.homeTeam === teamName ? f.awayTeam : f.homeTeam;
   const venue = f.homeTeam === teamName ? 'Home' : 'Away';
-  let right;
-  if (f.status === 'Submitted') {
-    const us = f.homeTeam === teamName ? f.homePoints : f.awayPoints;
-    const them = f.homeTeam === teamName ? f.awayPoints : f.homePoints;
-    right = `<span class="result">${us}–${them}</span>`;
-  } else {
-    const s = statusLabel(f.status);
-    right = `<span class="status-tag ${s.cls}">${s.text}</span>`;
-  }
+  const right = fixtureScoreHtml(f, teamName);
   return `
     <a class="fixture-row" style="text-decoration:none; color:inherit;" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">
       <div>

@@ -16,6 +16,11 @@
 <div class="wrap">
   <div class="err-banner" id="errBanner"></div>
 
+  <div id="liveWrap" class="hidden">
+    <h2 class="section-title" style="margin-top:0;"><span class="live-dot"></span>Live now</h2>
+    <div class="card" id="liveSection"></div>
+  </div>
+
   <h2 class="section-title" style="margin-top:0;">Admin</h2>
   <div class="quicklinks">
     <a class="quicklink-card" id="portalLink" href="#" target="_blank" rel="noopener">
@@ -102,6 +107,7 @@ try {
 loadLeagueData().then(render).catch(showPageError);
 
 function render(data) {
+  renderLive(data.fixtures.filter(isLive));
   renderNews(data.news);
   const { results, upcoming } = splitFixtures(data.fixtures);
   const latest = latestResults(results);
@@ -198,6 +204,26 @@ function renderResults(results) {
       </div>
       <a class="result" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">${f.homePoints}–${f.awayPoints}</a>
     </div>`).join('') + `<p style="margin:12px 0 0;"><a href="fixtures.html">See all fixtures &amp; results →</a></p>`;
+}
+
+// Matches under way right now (any fixture a captain has started entering but not
+// yet submitted) — running score from the games entered so far, refreshing itself
+// every minute while it's showing (see loadLeagueData in assets/data.js).
+function renderLive(live) {
+  const wrap = document.getElementById('liveWrap');
+  if (!live.length) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  document.getElementById('liveSection').innerHTML = live.map(f => {
+    const s = liveScore(f);
+    return `
+    <a class="fixture-row" style="text-decoration:none; color:inherit;" href="fixture.html?id=${encodeURIComponent(f.fixtureId)}">
+      <div>
+        <div class="teams">${escapeHtml(f.homeTeam)} v ${escapeHtml(f.awayTeam)} ${f.competition ? `<span class="chip brand">${escapeHtml(f.competition)}</span>` : ''}</div>
+        <div class="date">${s.played ? s.played + ' of 9 games played' : 'Just started'}</div>
+      </div>
+      ${fixtureScoreHtml(f)}
+    </a>`;
+  }).join('');
 }
 
 function renderUpcoming(upcoming) {
