@@ -50,6 +50,13 @@ function _readCachedData() {
   } catch (e) { return null; }
 }
 
+// Compares two copies of the league data, ignoring "generatedAt" — the API stamps
+// that fresh on every request, so it would otherwise always look "changed".
+function _sameLeagueData(a, b) {
+  const strip = d => JSON.stringify(Object.assign({}, d, { generatedAt: null }));
+  return strip(a) === strip(b);
+}
+
 let _userInteracted = false;
 ['scroll', 'click', 'keydown', 'touchstart', 'change'].forEach(evt =>
   window.addEventListener(evt, () => { _userInteracted = true; }, { passive: true, once: true }));
@@ -75,7 +82,7 @@ function loadLeagueData() {
     _dataPromise = Promise.resolve(cached.data);
     // Background refresh — only acts if something actually changed.
     _fetchLiveData().then(live => {
-      if (live.text === cached.text) return;
+      if (_sameLeagueData(live.data, cached.data)) return;
       // Safety net: never auto-reload twice within a minute (e.g. if the data ever
       // contains something that changes on every request), fall back to the bar.
       let recentlyReloaded = false;
