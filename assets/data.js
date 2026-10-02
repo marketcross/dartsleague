@@ -14,18 +14,90 @@ const SITE_CONFIG = {
 
 let _dataPromise = null;
 
-// Fetches once and caches for the lifetime of the page (every page calls this on load).
+// ---------- Speed: show the last-seen data instantly, refresh in the background ----------
+// Apps Script takes a few seconds to answer, so every page used to sit blank while it
+// did. Now each visitor's browser keeps a copy of the last data it loaded:
+//   - If there's a copy (less than a week old), the page renders from it straight away
+//     while the live data is fetched in the background.
+//   - If the live data turns out to be different (e.g. a result has just been
+//     submitted), the page quietly reloads itself with the new data — or, if the
+//     visitor has already started scrolling/clicking, shows a small "tap to update"
+//     bar instead so the page doesn't jump under them.
+//   - First visit (or no copy): behaves exactly as before — waits for the live data.
+const DATA_CACHE_KEY = 'mcdlLeagueData_v1';
+const DATA_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function _fetchLiveData() {
+  return fetch(SITE_CONFIG.API_URL.trim(), { cache: 'no-store' })
+    .then(r => {
+      if (!r.ok) throw new Error('Server returned ' + r.status);
+      return r.text();
+    })
+    .then(text => {
+      const data = JSON.parse(text);
+      try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), text: text })); } catch (e) { /* storage full/unavailable — fine */ }
+      return { data: data, text: text };
+    });
+}
+
+function _readCachedData() {
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (!entry || !entry.text || Date.now() - entry.savedAt > DATA_CACHE_MAX_AGE_MS) return null;
+    return { data: JSON.parse(entry.text), text: entry.text };
+  } catch (e) { return null; }
+}
+
+let _userInteracted = false;
+['scroll', 'click', 'keydown', 'touchstart', 'change'].forEach(evt =>
+  window.addEventListener(evt, () => { _userInteracted = true; }, { passive: true, once: true }));
+
+function _showUpdateBar() {
+  if (document.getElementById('mcdlUpdateBar')) return;
+  const bar = document.createElement('button');
+  bar.id = 'mcdlUpdateBar';
+  bar.type = 'button';
+  bar.textContent = 'New results are in — tap to update';
+  bar.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;' +
+    'background:#1f5c45;color:#fff;border:0;border-radius:999px;padding:10px 18px;font:600 14px/1.2 system-ui,sans-serif;' +
+    'box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;';
+  bar.addEventListener('click', () => location.reload());
+  document.body.appendChild(bar);
+}
+
+// Every page calls this on load and renders from what it resolves with.
 function loadLeagueData() {
-  if (!_dataPromise) {
-    _dataPromise = fetch(SITE_CONFIG.API_URL.trim())
-      .then(r => {
-        if (!r.ok) throw new Error('Server returned ' + r.status);
-        return r.json();
-      })
+  if (_dataPromise) return _dataPromise;
+  const cached = _readCachedData();
+  if (cached) {
+    _dataPromise = Promise.resolve(cached.data);
+    // Background refresh — only acts if something actually changed.
+    _fetchLiveData().then(live => {
+      if (live.text === cached.text) return;
+      // Safety net: never auto-reload twice within a minute (e.g. if the data ever
+      // contains something that changes on every request), fall back to the bar.
+      let recentlyReloaded = false;
+      try {
+        recentlyReloaded = Date.now() - Number(sessionStorage.getItem('mcdlAutoReloadAt') || 0) < 60000;
+        if (!recentlyReloaded && !_userInteracted) sessionStorage.setItem('mcdlAutoReloadAt', String(Date.now()));
+      } catch (e) { recentlyReloaded = true; }
+      if (_userInteracted || recentlyReloaded) _showUpdateBar();
+      else location.reload();
+    }).catch(err => console.warn('Background refresh of league data failed:', err));
+  } else {
+    _dataPromise = _fetchLiveData()
+      .then(live => live.data)
       .catch(err => { _dataPromise = null; throw err; });
   }
   return _dataPromise;
 }
+
+// Start the request as early as possible (this script is loaded before each page's
+// own render code, so the fetch is already under way by the time that runs). Pages
+// that don't need league data (portal/admin) skip this.
+if (!/\/(portal|admin)\.html$/.test(location.pathname)) loadLeagueData();
 
 function showPageError(err) {
   const el = document.getElementById('errBanner');

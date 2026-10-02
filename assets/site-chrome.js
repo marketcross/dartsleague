@@ -49,7 +49,7 @@
 
   function sponsorBadgeHtml() {
     if (!SPONSOR) return '';
-    return '<img src="' + SPONSOR.logo + '" alt="Sponsored by ' + SPONSOR.name + '" class="sponsor-badge">';
+    return '<img src="' + SPONSOR.logo + '" alt="Sponsored by ' + SPONSOR.name + '" class="sponsor-badge" width="51" height="46">';
   }
 
   function headerInnerHtml() {
