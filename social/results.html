@@ -31,7 +31,6 @@
           <h2 id="cardSub">Loading…</h2>
         </div>
         <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
-        <div class="card-highlights hidden" id="cardHighlights"></div>
       </div>
     </div>
     <div class="poster-footer">marketcrossdarts.uk</div>
@@ -56,15 +55,6 @@ function renderDate(group) {
         <div class="score">${f.homePoints}–${f.awayPoints}</div>
       </div>`).join('')
     : '<p class="empty">No results to show.</p>';
-
-  const highlightsEl = document.getElementById('cardHighlights');
-  const highlightsMarkup = highlightsHtml(weeklyHighlights(group ? group.fixtures : []));
-  if (highlightsMarkup) {
-    highlightsEl.innerHTML = '<div class="highlights-label">180s &amp; Finishes</div>' + highlightsMarkup;
-    highlightsEl.classList.remove('hidden');
-  } else {
-    highlightsEl.classList.add('hidden');
-  }
 }
 
 loadLeagueData().then(data => {

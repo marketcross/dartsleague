@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>180s &amp; High Finishes — Market Cross Darts League</title>
+<link rel="stylesheet" href="../assets/social.css">
+</head>
+<body>
+
+<div class="err-banner" id="errBanner"></div>
+<div class="toolbar">
+  <a href="index.html">← Back to social hub</a>
+  <select id="dateSelect" class="hidden"></select>
+  <button class="btn" id="downloadBtn" disabled>Download image</button>
+</div>
+
+<div class="poster-scale-wrap" id="posterWrap">
+  <div class="poster" id="posterFrame">
+    <div class="poster-brand">
+      <img src="../assets/logo.png" alt="Market Cross Darts League">
+      <div class="name">Market Cross Darts League</div>
+      <div class="season">2026/27 Season</div>
+    </div>
+    <div class="poster-card-wrap">
+      <div class="poster-card">
+        <div class="card-header">
+          <div class="league">180s &amp; High Finishes</div>
+          <h2 id="cardSub">Loading…</h2>
+        </div>
+        <div class="card-body" id="cardBody"><p class="empty">Loading…</p></div>
+      </div>
+    </div>
+    <div class="poster-footer">marketcrossdarts.uk</div>
+  </div>
+</div>
+
+<script src="../assets/data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+let DATE_GROUPS = [];
+
+function renderDate(group) {
+  document.getElementById('cardSub').textContent = group ? group.date : 'No results yet';
+  const markup = highlightsHtml(weeklyHighlights(group ? group.fixtures : []));
+  document.getElementById('cardBody').innerHTML = markup || '<p class="empty">No 180s or high finishes this night.</p>';
+}
+
+loadLeagueData().then(data => {
+  const results = data.fixtures.filter(f => f.status === 'Submitted');
+  DATE_GROUPS = groupFixturesByDate(results).sort((a, b) => b.dateISO.localeCompare(a.dateISO));
+
+  const sel = document.getElementById('dateSelect');
+  if (DATE_GROUPS.length) {
+    sel.classList.remove('hidden');
+    sel.innerHTML = DATE_GROUPS.map((g, i) => `<option value="${i}">${escapeHtml(g.date)}</option>`).join('');
+    sel.value = 0; // most recent match night by default
+    sel.addEventListener('change', () => renderDate(DATE_GROUPS[Number(sel.value)]));
+    renderDate(DATE_GROUPS[0]);
+  } else {
+    sel.classList.add('hidden');
+    renderDate(null);
+  }
+
+  document.getElementById('downloadBtn').disabled = false;
+}).catch(showPageError);
+
+fitPosterFrame('posterFrame', 'posterWrap');
+window.addEventListener('resize', () => fitPosterFrame('posterFrame', 'posterWrap'));
+
+document.getElementById('downloadBtn').addEventListener('click', function () {
+  downloadPosterFrame('posterFrame', 'mcdl-180s-finishes.png', this);
+});
+</script>
+</body>
+</html>

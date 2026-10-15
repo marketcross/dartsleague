@@ -110,3 +110,14 @@ table.tcard tr:first-child td:first-child{color:var(--brand);}
 
 .empty{color:var(--sub); font-size:24px; padding:8px 0; text-align:center;}
 .err-banner{max-width:600px; margin:0 auto 16px; background:#fdecec; border:1px solid #f2b8b8; color:#8a2323; font-size:13px; padding:10px 12px; border-radius:10px; display:none;}
+
+/* ---------- 180s & High Finishes poster (social/highlights.html): the same
+   highlightsHtml() markup, but given the whole card so it's sized like the results rows ---------- */
+.card-body .highlight-list{flex-direction:column; flex-wrap:nowrap; gap:0;}
+.card-body .highlight-row{
+  background:none; border:0; border-bottom:1.5px solid var(--line); border-radius:0;
+  padding:20px 0; font-size:30px; gap:14px; flex-wrap:wrap;
+}
+.card-body .highlight-name{font-size:32px;}
+.card-body .highlight-team{font-size:22px; margin-right:auto;}
+.card-body .highlight-row .chip{font-size:24px; padding:7px 18px;}
