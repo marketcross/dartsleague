@@ -348,10 +348,11 @@ function weeklyHighlights(fixtures) {
       if (!s.name) return;
       const team = teamByName[s.name] || '';
       const key = team + '||' + s.name;
-      if (!byPlayer[key]) byPlayer[key] = { name: s.name, team, oneEighties: 0, bestFinish: null };
+      if (!byPlayer[key]) byPlayer[key] = { name: s.name, team, oneEighties: 0, bestFinish: null, finishes: [] };
       if (s.type === '180') byPlayer[key].oneEighties++;
       else if (s.type === 'finish' && s.value) {
         const v = Number(s.value);
+        byPlayer[key].finishes.push(v);
         if (byPlayer[key].bestFinish === null || v > byPlayer[key].bestFinish) byPlayer[key].bestFinish = v;
       }
     });

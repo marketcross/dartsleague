@@ -42,10 +42,49 @@
 <script>
 let DATE_GROUPS = [];
 
+// Every 180 and every finish for the night (the shared highlightsHtml() only shows each
+// player's best finish, which is right for the homepage round-up but not this poster).
+function posterHighlightsHtml(list) {
+  if (!list.length) return '';
+  return '<div class="highlight-list" id="hlList">' + list.map(p => {
+    const badges = [];
+    if (p.oneEighties) badges.push(`<span class="chip gold">${p.oneEighties > 1 ? p.oneEighties + '&times; ' : ''}180</span>`);
+    (p.finishes || []).slice().sort((x, y) => y - x)
+      .forEach(v => badges.push(`<span class="chip gold">${v} checkout</span>`));
+    return `
+    <div class="highlight-row">
+      <span class="highlight-name">${escapeHtml(p.name)}</span>
+      ${p.team ? `<span class="highlight-team">${escapeHtml(p.team)}</span>` : ''}
+      <div class="hl-chips">${badges.join('')}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// Shrink the list (then go to two columns, then shrink again) until it all fits inside
+// the card, so nobody gets cut off the bottom of the downloaded image.
+function fitHighlights() {
+  const list = document.getElementById('hlList');
+  if (!list) return;
+  const body = document.getElementById('cardBody');
+  const cs = getComputedStyle(body);
+  const room = body.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  // Two columns as standard; a short list (3 or fewer players) reads better as one.
+  const steps = [];
+  if (list.children.length <= 3) for (let px = 30; px >= 22; px -= 2) steps.push([false, px]);
+  for (let px = 28; px >= 10; px -= 1) steps.push([true, px]);
+  for (const [twoCol, px] of steps) {
+    list.classList.toggle('two-col', twoCol);
+    list.style.fontSize = px + 'px';
+    if (list.offsetHeight <= room) return;
+  }
+}
+
 function renderDate(group) {
   document.getElementById('cardSub').textContent = group ? group.date : 'No results yet';
-  const markup = highlightsHtml(weeklyHighlights(group ? group.fixtures : []));
+  const markup = posterHighlightsHtml(weeklyHighlights(group ? group.fixtures : []));
   document.getElementById('cardBody').innerHTML = markup || '<p class="empty">No 180s or high finishes this night.</p>';
+  fitHighlights();
+  fitPosterFrame('posterFrame', 'posterWrap');
 }
 
 loadLeagueData().then(data => {
